@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>乾拌砂漿粉體緻密堆積模擬</title>
+<meta name="theme-color" content="#1C2E4A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="堆積模擬">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --ink:#1C2E4A; --steel:#5B6B7F; --grid:#E3ECF7; --line:#C9D6E8; --paper:#FFFFFF; --wash:#F5F8FC;
+  --accent:#D4450C; --ok:#2F7D4F; --warn:#B7791F; --bad:#B42318;
+  --m0:#5F7A99; --m1:#E3D7B0; --m2:#4D4A47; --m3:#D9A85B;
+  --font:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+  --num:"SF Pro Text","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;line-height:1.6;font-size:15px}
+header{background:var(--ink);color:#fff;padding:18px 16px 14px}
+header .brand{display:flex;align-items:center;gap:12px}header .brand img{width:44px;height:44px;flex:0 0 44px}
+header h1{margin:0;font-size:1.25rem;font-weight:700;letter-spacing:.02em}
+header p{margin:4px 0 0;font-size:.85rem;color:#B9C6D8}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:#fff;border-bottom:2px solid var(--ink);
+  display:flex;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;border:0;background:none;padding:12px 14px;font:inherit;font-size:.92rem;color:var(--steel);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+nav button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
+nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:980px;margin:0 auto;padding:16px 12px 48px}
+section.tab{display:none}section.tab.on{display:block}
+h2{font-size:1.1rem;margin:22px 0 10px;padding-left:10px;border-left:4px solid var(--accent)}
+h3{font-size:1rem;margin:0}
+.card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:4px;padding:12px 14px;margin:10px 0}
+.card.mat{border-left-width:6px}
+.card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.swatch{display:inline-block;width:18px;height:18px;border-radius:50%;flex:0 0 18px;border:1px solid rgba(0,0,0,.25)}
+.spec{font-size:.82rem;color:var(--steel)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 12px}
+label{display:flex;flex-direction:column;font-size:.8rem;color:var(--steel);gap:3px}
+input,select,textarea{font:inherit;font-size:.95rem;color:var(--ink);padding:7px 8px;border:1px solid var(--line);border-radius:3px;background:#fff;width:100%;font-variant-numeric:tabular-nums}
+textarea{min-height:84px;font-size:.85rem}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;font:inherit;padding:10px 16px;border-radius:3px;cursor:pointer;font-weight:600}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn.accent{background:var(--accent);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.badge{display:inline-block;font-size:.75rem;padding:1px 7px;border-radius:10px;border:1px solid currentColor;white-space:nowrap}
+.badge.ok{color:var(--ok)}.badge.bad{color:var(--bad)}.badge.warn{color:var(--warn)}
+.note{font-size:.84rem;color:var(--steel);margin:6px 0}
+.warnbox{border-left-color:var(--warn);background:#FFFBF2}
+.badbox{border-left-color:var(--bad);background:#FFF5F4}
+table.rt{width:100%;border-collapse:collapse;font-size:.86rem;font-variant-numeric:tabular-nums;background:#fff}
+table.rt th,table.rt td{border:1px solid var(--line);padding:6px 8px;text-align:right}
+table.rt th{background:var(--wash);color:var(--ink);font-weight:600}
+table.rt td:first-child,table.rt th:first-child{text-align:left}
+@media (max-width:640px){
+  table.rt thead{display:none}
+  table.rt,table.rt tbody,table.rt tr,table.rt td{display:block;width:100%}
+  table.rt tr{border:1px solid var(--line);border-left:4px solid var(--ink);margin:8px 0;border-radius:4px;padding:4px 0}
+  table.rt td{border:0;border-bottom:1px dashed var(--grid);text-align:right;padding:5px 10px;position:relative;padding-left:46%}
+  table.rt td:last-child{border-bottom:0}
+  table.rt td::before{content:attr(data-label);position:absolute;left:10px;top:5px;color:var(--steel);text-align:left;font-size:.8rem;max-width:44%}
+  table.rt td:first-child{text-align:left;padding-left:10px;font-weight:700}
+  table.rt td:first-child::before{content:none}
+}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.kpi{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:4px;padding:10px 12px}
+.kpi .v{font-family:var(--num);font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi .l{font-size:.82rem;color:var(--steel)}
+.kpi .s{font-size:.78rem;color:var(--steel)}
+.chart{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--line);border-radius:4px}
+.viewer-wrap{position:relative;background:#14243B;border-radius:4px;overflow:hidden;touch-action:none}
+#viewer{width:100%;display:block;aspect-ratio:1/1;max-height:70vh}
+.hud{position:absolute;left:10px;top:8px;color:#fff;font-family:var(--num);font-variant-numeric:tabular-nums;pointer-events:none;text-shadow:0 1px 2px #000}
+.hud .phi{font-size:2rem;font-weight:700;line-height:1}
+.hud .sub{font-size:.78rem;color:#C9D6E8}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;margin:6px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.bar{height:8px;background:var(--grid);border-radius:4px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);width:0}
+.log{font-size:.8rem;max-height:220px;overflow:auto;background:#fff;border:1px solid var(--line);padding:6px 8px;border-radius:4px}
+.log div{border-bottom:1px dotted var(--grid);padding:2px 0}
+.test .card-header{justify-content:space-between}
+ol.refs{padding-left:20px;font-size:.86rem}ol.refs li{margin:4px 0}
+.two{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:860px){.two{grid-template-columns:1fr 1fr}}
+@media print{
+  nav,header .no-print,.no-print,section.tab{display:none!important}
+  section#tab-report{display:block!important}
+  body{background:#fff}
+  .card{break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="updBar" hidden style="position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1C2E4A;color:#fff;padding:10px 14px;border-radius:4px;gap:10px;align-items:center;justify-content:space-between"><span>已有新版本可使用。</span><button class="btn accent" id="updBtn">重新載入</button></div>
+<header>
+  <div class="brand"><img src="icon-192.png" alt="" width="44" height="44"><div><h1>乾拌砂漿粉體緻密堆積模擬</h1>
+  <p>DEM 壓縮—鬆弛法 雙尺度組合</p></div></div>
+</header>
+<nav role="tablist" id="tabs">
+  <button role="tab" data-tab="input" aria-selected="true">數據輸入</button>
+  <button role="tab" data-tab="proc" aria-selected="false">計算過程</button>
+  <button role="tab" data-tab="result" aria-selected="false">成果顯示</button>
+  <button role="tab" data-tab="test" aria-selected="false">自我檢驗</button>
+  <button role="tab" data-tab="report" aria-selected="false">報告列印</button>
+  <button role="tab" data-tab="ref" aria-selected="false">假設與文獻</button>
+</nav>
+<main>
+
+<!-- ================= 數據輸入 ================= -->
+<section class="tab on" id="tab-input">
+  <h2>1. 粉體材料</h2>
+  <p class="note">粒徑分布預設由 Blaine 比表面積以 RRSB 分布反算（文獻參數暫代）。若有雷射粒徑分析，請於「自訂粒徑分布」貼上，系統將改用實測分布。</p>
+  <div id="matCards"></div>
+
+  <h2>2. ECC 專用石英細砂</h2>
+  <div class="card mat" style="border-left-color:var(--m3)">
+    <div class="card-header"><span class="swatch" style="background:var(--m3)"></span><h3>石英細砂</h3><span class="spec">規格：FM 1.4–1.6、Dmax ≤ 1.2 mm、0.075 mm 通過 &lt; 3%</span></div>
+    <div class="grid">
+      <label>用量（kg）<input type="number" id="sand_mass" step="1"></label>
+      <label>密度（g/cm³）<input type="number" id="sand_rho" step="0.01"></label>
+      <label>最細粒徑下限（μm）<input type="number" id="sand_dfine" step="1"></label>
+    </div>
+    <table class="rt" style="margin-top:10px">
+      <thead><tr><th>篩號（mm）</th><th>累積通過（%）</th><th>累積停留（%）</th></tr></thead>
+      <tbody id="sieveBody"></tbody>
+    </table>
+    <div class="row" style="margin-top:8px" id="sandChecks"></div>
+  </div>
+
+  <h2>3. 添加劑與纖維</h2>
+  <p class="note">以下材料用量少或形狀極端（PVA 纖維長徑比 300），不納入顆粒堆積模型；僅計入批次質量與體積，並於成果中提示其影響。</p>
+  <div id="addCards"></div>
+
+  <h2>4. 模擬設定</h2>
+  <div class="card">
+    <div class="grid">
+      <label>堆積狀態
+        <select id="state">
+          <option value="disp">分散態（減水劑作用，無黏附）</option>
+          <option value="dry">乾粉態（含凡得瓦黏附）</option>
+        </select></label>
+      <label>精度等級
+        <select id="preset">
+          <option value="fast">快速（粉體 900 顆、粒徑比 5）</option>
+          <option value="std" selected>標準（粉體 1500 顆、粒徑比 6）</option>
+          <option value="fine">精細（粉體 2500 顆、粒徑比 8）</option>
+        </select></label>
+      <label>亂數種子重複次數<input type="number" id="nrep" min="1" max="10" step="1"></label>
+      <label>粉體顆粒摩擦係數 μ<input type="number" id="mu_p" step="0.05"></label>
+      <label>石英砂摩擦係數 μ<input type="number" id="mu_s" step="0.05"></label>
+      <label>恢復係數 e<input type="number" id="e_rest" step="0.05"></label>
+    </div>
+    <div class="grid" id="dryOpts" style="margin-top:8px">
+      <label>圍壓 P₀（kPa）<input type="number" id="P0" step="0.5"></label>
+      <label>Hamaker 常數（×10⁻²⁰ J）<input type="number" id="hamaker" step="0.1"></label>
+      <label>最小間距 z₀（nm）<input type="number" id="z0" step="0.05"></label>
+      <label>表面粗糙度折減係數<input type="number" id="frough" step="0.05"></label>
+    </div>
+    <p class="note" id="stateNote"></p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn accent" id="runBtn">開始模擬</button>
+      <button class="btn ghost" id="resetBtn">恢復預設值</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 計算過程 ================= -->
+<section class="tab" id="tab-proc">
+  <h2>1. 粒徑分布（體積累積通過）</h2>
+  <div id="psdChart"></div>
+  <div class="legend" id="psdLegend"></div>
+
+  <h2>2. DEM 粒子離散化</h2>
+  <p class="note">每一尺度取「粒徑比窗口」內涵蓋體積最大之區段，劃分 6 個對數等距粒徑級；窗口外之體積夾至端點級（細端夾大、粗端夾小），並列出被夾體積比例。</p>
+  <div id="discInfo"></div>
+
+  <h2 id="liveHead">3. 壓縮—鬆弛即時狀態</h2>
+  <div class="two">
+    <div>
+      <div class="viewer-wrap">
+        <canvas id="viewer" width="720" height="720" aria-label="三維顆粒堆積檢視，可拖曳旋轉"></canvas>
+        <div class="hud"><div class="phi" id="hudPhi">—</div><div class="sub" id="hudSub">尚未開始</div></div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <select id="scaleSel" style="width:auto" aria-label="顯示尺度"><option value="live">即時（目前計算）</option><option value="p">粉體尺度</option><option value="s">砂尺度</option></select>
+        <select id="seedSel" style="width:auto" aria-label="亂數種子組別" disabled><option>—</option></select>
+        <select id="colorMode" style="width:auto" aria-label="著色方式"><option value="mat">依材料著色</option><option value="size">依粒徑著色</option><option value="z">依配位數著色</option></select>
+      </div>
+      <div class="row"><span class="note">拖曳可旋轉；雙指縮放。計算中選「粉體尺度／砂尺度」可檢視已完成之結果，選「即時」恢復跟隨計算。</span>
+      </div>
+      <div class="legend" id="viewLegend"></div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-header"><h3 id="jobTitle">等待執行</h3></div>
+        <div class="bar"><i id="jobBar"></i></div>
+        <p class="note" id="jobText"></p>
+        <div class="row"><button class="btn ghost" id="stopBtn" disabled>停止模擬</button></div>
+      </div>
+      <div id="convChart"></div>
+      <div class="log" id="log" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 成果顯示 ================= -->
+<section class="tab" id="tab-result">
+  <div id="resultBody"><div class="card"><p>尚無成果。請於「數據輸入」頁按「開始模擬」。</p></div></div>
+</section>
+
+<!-- ================= 自我檢驗 ================= -->
+<section class="tab" id="tab-test">
+  <h2>模型自我檢驗</h2>
+  <p class="note">第一層（數值驗證）與第二層（物理基準）測試。全部於本機瀏覽器執行，約需 15–40 秒。</p>
+  <div class="row"><button class="btn accent" id="testBtn">執行全部檢驗</button></div>
+  <div id="testBody"></div>
+</section>
+
+<!-- ================= 報告列印 ================= -->
+<section class="tab" id="tab-report">
+  <div class="row no-print" style="margin:12px 0"><button class="btn accent" id="printBtn">列印 / 另存 PDF</button></div>
+  <div id="reportBody"><div class="card"><p>完成模擬後，此處自動產生報告。</p></div></div>
+</section>
+
+<!-- ================= 假設與文獻 ================= -->
+<section class="tab" id="tab-ref">
+  <h2>1. 模型架構</h2>
+  <div class="card"><div class="card-header"><h3>雙尺度組合</h3></div>
+    <p>粉體（水泥、爐石粉、飛灰及石英砂中 &lt; 75 μm 部分）與石英砂（≥ 75 μm）之代表粒徑比約 1 : 20，瀏覽器無法以單一模型同時解析。本工具分別以 DEM 求兩尺度之堆積率 φ<sub>p</sub>、φ<sub>s</sub>，再以 de Larrard 可壓密堆積模型（CPM）之二成分虛擬堆積式組合（1 = 砂、2 = 粉體）：</p>
+    <p>γ<sub>1</sub> = β<sub>1</sub> / [1 − (1 − a<sub>12</sub>β<sub>1</sub>/β<sub>2</sub>) y<sub>2</sub>]<br>γ<sub>2</sub> = β<sub>2</sub> / [1 − (1 − β<sub>2</sub> + b<sub>21</sub>β<sub>2</sub>(1 − 1/β<sub>1</sub>)) y<sub>1</sub>]<br>φ<sub>mix</sub> = min(γ<sub>1</sub>, γ<sub>2</sub>)</p>
+    <p>鬆動效應 a<sub>12</sub> = √[1 − (1 − d<sub>2</sub>/d<sub>1</sub>)<sup>1.02</sup>]，壁效應 b<sub>21</sub> = 1 − (1 − d<sub>2</sub>/d<sub>1</sub>)<sup>1.50</sup>，d 取各尺度體積 D50。</p>
+    <p class="note">原式之 β 為「虛擬堆積密度」；本工具以 DEM 實際堆積率代入，屬近似處理。d<sub>2</sub>/d<sub>1</sub> → 0 時退化為 Furnas 無交互作用式，成果中併列供比較。</p>
+  </div>
+  <div class="card"><div class="card-header"><h3>DEM 接觸模型與堆積程序</h3></div>
+    <p>球形顆粒、線性彈簧—阻尼法向力、含歷史之切向彈簧與庫倫摩擦上限、轉動自由度；乾粉態另加 DMT 型定值黏附力 F<sub>ad</sub> = f<sub>r</sub>·A·R*／(12 z₀²)。週期邊界盒中隨機置放至 φ = 0.30，之後逐步等向壓縮並於每步阻尼鬆弛，直至圍壓落入 P₀ ±20% 且動能低於門檻；超壓時回脹並將增量減半。</p>
+    <p class="note">無因次化：長度以模型最大粒徑、力以 P₀·d²<sub>max</sub> 為單位，法向勁度 k<sub>n</sub> = 1000（剛性極限，重疊量約 0.1%）。動態部分採質量縮放（m ∝ d²）以放寬時間步長，不影響準靜態堆積結果。</p>
+  </div>
+  <div class="card"><div class="card-header"><h3>收斂與終止條件</h3></div>
+    <p>收斂：圍壓 0.8–1.2 P₀ 且平均動能 &lt; 10⁻⁶。終止：壓縮增量細分至 2×10⁻⁶ 以下、超過 900 次壓縮循環，或超過 4×10⁶ 時間步。未收斂者於成果中標示並排除於平均值外。</p>
+  </div>
+  <h2>2. 參數與來源（文獻暫代值）</h2>
+  <div id="paramTable"></div>
+  <h2>3. 已知限制</h2>
+  <div class="card warnbox"><div class="card-header"><h3>粒徑截斷</h3></div><p>粒徑比窗口外之細料被夾大、粗料被夾小，使 DEM 結果傾向低估；成果頁列出各尺度被夾體積比例。若被夾比例過高，可改用「精細」等級（粒徑比 8）比較差異。</p></div>
+  <div class="card warnbox"><div class="card-header"><h3>顆粒形狀</h3></div><p>全部以球體模擬。飛灰接近球形，水泥、爐石粉與石英砂為稜角顆粒，實際堆積率通常低於球體結果。</p></div>
+  <div class="card warnbox"><div class="card-header"><h3>纖維與添加劑</h3></div><p>PVA 纖維（12 mm × 40 μm）、RDP、HPMC、消泡劑與粉體強塑劑未納入顆粒模型。纖維會擾動顆粒排列而降低堆積率，其影響須以試驗校準。</p></div>
+  <div class="card warnbox"><div class="card-header"><h3>需水量</h3></div><p>「填滿空隙最小需水量」僅代表將顆粒間空隙填滿所需之水量。實際拌合需水量尚須加上顆粒表面水膜，並受減水劑、HPMC 保水作用影響。</p></div>
+  <div class="card badbox"><div class="card-header"><h3>校準狀態</h3></div><p>本版全部參數為文獻代表值，尚未以本批材料之試驗（雷射粒徑、濕堆積法、鬆裝單位重）校準。成果僅供配比比較與趨勢分析，不得直接作為品質判定依據。</p></div>
+  <h2>4. 參考文獻</h2>
+  <ol class="refs">
+    <li>Cundall, P. A., &amp; Strack, O. D. L. (1979). A discrete numerical model for granular assemblies. <i>Géotechnique</i>, 29(1), 47–65.</li>
+    <li>Schäfer, J., Dippel, S., &amp; Wolf, D. E. (1996). Force schemes in simulations of granular materials. <i>Journal de Physique I</i>, 6(1), 5–20.</li>
+    <li>O'Hern, C. S., Silbert, L. E., Liu, A. J., &amp; Nagel, S. R. (2003). Jamming at zero temperature and zero applied stress: The epitome of disorder. <i>Physical Review E</i>, 68, 011306.</li>
+    <li>Silbert, L. E. (2010). Jamming of frictional spheres and random loose packing. <i>Soft Matter</i>, 6, 2918–2924.（arXiv:1108.0012）</li>
+    <li>Scott, G. D., &amp; Kilgour, D. M. (1969). The density of random close packing of spheres. <i>Journal of Physics D</i>, 2, 863–866.</li>
+    <li>Onoda, G. Y., &amp; Liniger, E. G. (1990). Random loose packings of uniform spheres and the dilatancy onset. <i>Physical Review Letters</i>, 64, 2727–2730.</li>
+    <li>Furnas, C. C. (1931). Grading aggregates I: Mathematical relations for beds of broken solids of maximum density. <i>Industrial &amp; Engineering Chemistry</i>, 23(9), 1052–1058.</li>
+    <li>de Larrard, F. (1999). <i>Concrete Mixture Proportioning: A Scientific Approach</i>. London: E &amp; FN Spon.</li>
+    <li>Rosin, P., &amp; Rammler, E. (1933). The laws governing the fineness of powdered coal. <i>Journal of the Institute of Fuel</i>, 7, 29–36.</li>
+    <li>Israelachvili, J. N. (2011). <i>Intermolecular and Surface Forces</i> (3rd ed.). Academic Press.</li>
+    <li>Derjaguin, B. V., Muller, V. M., &amp; Toporov, Yu. P. (1975). Effect of contact deformations on the adhesion of particles. <i>Journal of Colloid and Interface Science</i>, 53(2), 314–326.</li>
+    <li>Wong, H. H. C., &amp; Kwan, A. K. H. (2008). Packing density of cementitious materials: part 1 — measurement using a wet packing method. <i>Materials and Structures</i>, 41, 689–701.</li>
+    <li>Li, V. C. (2019). <i>Engineered Cementitious Composites (ECC): Bendable Concrete for Sustainable and Resilient Infrastructure</i>. Springer.</li>
+    <li>ASTM C204（Blaine 透氣法比表面積）；ASTM C136 / CNS 486（篩分析與細度模數）；ASTM C29（單位重與空隙率）。</li>
+    <li>LAMMPS Developers. pair_style granular、compute contact/atom 說明文件（docs.lammps.org），作為後續程式間交叉驗證之參考引擎。</li>
+  </ol>
+  <h2>5. 離線安裝（PWA）</h2>
+  <div class="card"><p>Android Chrome：開啟本頁後點選「安裝應用程式」或選單中的「加入主畫面」。iOS Safari：點選分享按鈕後選「加入主畫面」。安裝後可離線使用，計算全部於本機執行。</p>
+    <p class="note" id="pwaState">離線狀態檢查中…</p>
+    <div class="row"><button class="btn ghost" id="installBtn" hidden>安裝至本機</button></div></div>
+</section>
+</main>
+
+<script id="engine-src" type="text/plain">
+/* ===== DEM 緻密堆積引擎（週期邊界、壓縮—鬆弛法、線性彈簧—阻尼＋庫倫摩擦＋DMT型定值黏附）=====
+   無因次化：長度 = 模型最大粒徑 d_ref；力 = P0·d_ref²；目標圍壓 P0 = 1。                     */
+var DEM = (function () {
+  function rng(seed) {
+    var s = (seed >>> 0) || 123456789;
+    return function () { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
+  }
+
+  function makeSystem(spec) {
+    var N = spec.d.length, p = spec.params;
+    var S = { N: N, p: p };
+    S.R = new Float64Array(N); S.m = new Float64Array(N); S.I = new Float64Array(N);
+    S.x = new Float64Array(3 * N); S.v = new Float64Array(3 * N); S.w = new Float64Array(3 * N);
+    S.f = new Float64Array(3 * N); S.t = new Float64Array(3 * N);
+    S.mat = new Int32Array(N); S.zc = new Int32Array(N);
+    var vol = 0, dmax = 0, mmin = Infinity;
+    for (var i = 0; i < N; i++) {
+      var d = spec.d[i]; S.R[i] = d / 2; dmax = Math.max(dmax, d);
+      var rho = spec.rho ? spec.rho[i] : 2.65;
+      var mexp = p.massScale ? 2 : 3;               // 質量縮放：m ∝ d²（僅影響動態，不影響靜態堆積）
+      S.m[i] = rho * Math.PI / 6 * Math.pow(d, mexp);
+      S.I[i] = 0.4 * S.m[i] * S.R[i] * S.R[i];
+      S.mat[i] = spec.mat ? spec.mat[i] : 0;
+      vol += Math.PI / 6 * d * d * d; mmin = Math.min(mmin, S.m[i]);
+    }
+    S.Vp = vol; S.dmax = dmax;
+    S.kn = p.kn || 1000; S.kt = S.kn * 2 / 7;
+    var e = Math.max(1e-4, Math.min(1, p.e == null ? 0.3 : p.e));
+    var le = Math.log(e);
+    S.zeta = e >= 1 ? 0 : -le / Math.sqrt(Math.PI * Math.PI + le * le);
+    S.dt = (p.dtFac || 0.12) * Math.sqrt(mmin / S.kn);
+    S.mu = p.mu || 0;
+    S.cAd = p.cAd || 0;                               // F_ad = cAd·R*
+    S.skin = (p.skinFac || 0.1) * dmax;
+    return S;
+  }
+
+  /* 隨機序列置放（大顆先放）；失敗時取重疊最小之位置 */
+  function placeRandom(S, phi0, seed) {
+    var N = S.N, r = rng(seed), L = Math.cbrt(S.Vp / phi0); S.L = L;
+    var order = []; for (var i = 0; i < N; i++) order.push(i);
+    order.sort(function (a, b) { return S.R[b] - S.R[a]; });
+    var cs = S.dmax, nc = Math.max(1, Math.floor(L / cs)), cw = L / nc;
+    var cells = new Array(nc * nc * nc); for (var c = 0; c < cells.length; c++) cells[c] = [];
+    function cidx(a) { a = Math.floor(a / cw); if (a >= nc) a = nc - 1; if (a < 0) a = 0; return a; }
+    for (var k = 0; k < N; k++) {
+      var id = order[k], best = null, bestOv = Infinity;
+      for (var att = 0; att < 300; att++) {
+        var px = r() * L, py = r() * L, pz = r() * L, ov = 0;
+        var cx = cidx(px), cy = cidx(py), cz = cidx(pz);
+        for (var ax = -1; ax <= 1 && ov < bestOv; ax++) for (var ay = -1; ay <= 1; ay++) for (var az = -1; az <= 1; az++) {
+          if (nc < 3 && (ax || ay || az)) continue;
+          var cc = (((cx + ax + nc) % nc) * nc + ((cy + ay + nc) % nc)) * nc + ((cz + az + nc) % nc), lst = cells[cc];
+          for (var q = 0; q < lst.length; q++) {
+            var j = lst[q], dx = S.x[3 * j] - px, dy = S.x[3 * j + 1] - py, dz = S.x[3 * j + 2] - pz;
+            dx -= L * Math.round(dx / L); dy -= L * Math.round(dy / L); dz -= L * Math.round(dz / L);
+            var dd = Math.sqrt(dx * dx + dy * dy + dz * dz), o = S.R[id] + S.R[j] - dd;
+            if (o > 0) ov += o;
+          }
+        }
+        if (nc < 3) { // 小系統：全部比對
+          ov = 0;
+          for (var q2 = 0; q2 < k; q2++) {
+            var j2 = order[q2], ex = S.x[3 * j2] - px, ey = S.x[3 * j2 + 1] - py, ez = S.x[3 * j2 + 2] - pz;
+            ex -= L * Math.round(ex / L); ey -= L * Math.round(ey / L); ez -= L * Math.round(ez / L);
+            var o2 = S.R[id] + S.R[j2] - Math.sqrt(ex * ex + ey * ey + ez * ez); if (o2 > 0) ov += o2;
+          }
+        }
+        if (ov < bestOv) { bestOv = ov; best = [px, py, pz]; if (ov === 0) break; }
+      }
+      S.x[3 * id] = best[0]; S.x[3 * id + 1] = best[1]; S.x[3 * id + 2] = best[2];
+      cells[(cidx(best[0]) * nc + cidx(best[1])) * nc + cidx(best[2])].push(id);
+    }
+  }
+
+  /* Verlet 鄰居表（保留切向彈簧歷史） */
+  function buildList(S) {
+    var N = S.N, L = S.L, rcMax = S.dmax + S.skin;
+    var oldMap = null;
+    if (S.np) {
+      oldMap = new Map();
+      for (var a = 0; a < S.np; a++) {
+        var h = 3 * a;
+        if (S.hx[h] !== 0 || S.hx[h + 1] !== 0 || S.hx[h + 2] !== 0) oldMap.set(S.pi[a] * N + S.pj[a], [S.hx[h], S.hx[h + 1], S.hx[h + 2]]);
+      }
+    }
+    var cap = Math.max(1024, N * 24), pi = new Int32Array(cap), pj = new Int32Array(cap), np = 0;
+    function push(i, j) {
+      if (np >= cap) { cap *= 2; var a1 = new Int32Array(cap), a2 = new Int32Array(cap); a1.set(pi); a2.set(pj); pi = a1; pj = a2; }
+      pi[np] = i; pj[np] = j; np++;
+    }
+    function test(i, j) {
+      var dx = S.x[3 * j] - S.x[3 * i], dy = S.x[3 * j + 1] - S.x[3 * i + 1], dz = S.x[3 * j + 2] - S.x[3 * i + 2];
+      dx -= L * Math.round(dx / L); dy -= L * Math.round(dy / L); dz -= L * Math.round(dz / L);
+      var rc = S.R[i] + S.R[j] + S.skin;
+      if (dx * dx + dy * dy + dz * dz < rc * rc) { if (i < j) push(i, j); else push(j, i); }
+    }
+    var nc = Math.floor(L / rcMax);
+    if (nc < 3) {
+      for (var i = 0; i < N; i++) for (var j = i + 1; j < N; j++) test(i, j);
+    } else {
+      var cw = L / nc, head = new Int32Array(nc * nc * nc).fill(-1), next = new Int32Array(N), cl = new Int32Array(N);
+      for (var i2 = 0; i2 < N; i2++) {
+        var ix = Math.floor(((S.x[3 * i2] % L) + L) % L / cw), iy = Math.floor(((S.x[3 * i2 + 1] % L) + L) % L / cw), iz = Math.floor(((S.x[3 * i2 + 2] % L) + L) % L / cw);
+        if (ix >= nc) ix = nc - 1; if (iy >= nc) iy = nc - 1; if (iz >= nc) iz = nc - 1;
+        var c = (ix * nc + iy) * nc + iz; cl[i2] = c; next[i2] = head[c]; head[c] = i2;
+      }
+      for (var cx = 0; cx < nc; cx++) for (var cy = 0; cy < nc; cy++) for (var cz = 0; cz < nc; cz++) {
+        var c0 = (cx * nc + cy) * nc + cz;
+        for (var ax = -1; ax <= 1; ax++) for (var ay = -1; ay <= 1; ay++) for (var az = -1; az <= 1; az++) {
+          var c1 = (((cx + ax + nc) % nc) * nc + ((cy + ay + nc) % nc)) * nc + ((cz + az + nc) % nc);
+          if (c1 < c0) continue;
+          for (var p1 = head[c0]; p1 >= 0; p1 = next[p1]) {
+            for (var p2 = (c1 === c0 ? next[p1] : head[c1]); p2 >= 0; p2 = next[p2]) test(p1, p2);
+          }
+        }
+      }
+    }
+    S.pi = pi; S.pj = pj; S.np = np; S.hx = new Float64Array(3 * np);
+    if (oldMap) for (var b = 0; b < np; b++) {
+      var v = oldMap.get(pi[b] * N + pj[b]);
+      if (v) { S.hx[3 * b] = v[0]; S.hx[3 * b + 1] = v[1]; S.hx[3 * b + 2] = v[2]; }
+    }
+    S.x0 = Float64Array.from(S.x); S.L0 = L;
+  }
+
+  function needRebuild(S) {
+    if (!S.np && S.np !== 0) return true;
+    var maxd2 = 0, N = S.N, sc = S.L / S.L0;
+    for (var i = 0; i < 3 * N; i++) { var d = S.x[i] - S.x0[i] * sc; if (d * d > maxd2) maxd2 = d * d; }
+    return 2 * Math.sqrt(maxd2) + (S.dmax + S.skin) * Math.abs(1 - sc) > S.skin;
+  }
+
+  /* 單步：力計算＋積分；回傳 {ke, P, nc} */
+  function step(S) {
+    var N = S.N, L = S.L, x = S.x, v = S.v, w = S.w, f = S.f, t = S.t, R = S.R;
+    f.fill(0); t.fill(0); S.zc.fill(0);
+    var kn = S.kn, kt = S.kt, mu = S.mu, dt = S.dt, vir = 0, ncont = 0;
+    for (var a = 0; a < S.np; a++) {
+      var i = S.pi[a], j = S.pj[a], i3 = 3 * i, j3 = 3 * j, h = 3 * a;
+      var dx = x[j3] - x[i3], dy = x[j3 + 1] - x[i3 + 1], dz = x[j3 + 2] - x[i3 + 2];
+      dx -= L * Math.round(dx / L); dy -= L * Math.round(dy / L); dz -= L * Math.round(dz / L);
+      var rs = R[i] + R[j], r2 = dx * dx + dy * dy + dz * dz;
+      if (r2 >= rs * rs) { S.hx[h] = S.hx[h + 1] = S.hx[h + 2] = 0; continue; }
+      var r = Math.sqrt(r2), nx = dx / r, ny = dy / r, nz = dz / r, del = rs - r;
+      // 接觸點相對速度 v_rel = v_i - v_j + (R_i ω_i + R_j ω_j) × n
+      var ox = R[i] * w[i3] + R[j] * w[j3], oy = R[i] * w[i3 + 1] + R[j] * w[j3 + 1], oz = R[i] * w[i3 + 2] + R[j] * w[j3 + 2];
+      var vx = v[i3] - v[j3] + (oy * nz - oz * ny), vy = v[i3 + 1] - v[j3 + 1] + (oz * nx - ox * nz), vz = v[i3 + 2] - v[j3 + 2] + (ox * ny - oy * nx);
+      var vn = vx * nx + vy * ny + vz * nz;
+      var meff = S.m[i] * S.m[j] / (S.m[i] + S.m[j]), gn = 2 * S.zeta * Math.sqrt(kn * meff);
+      var fel = kn * del, Rst = R[i] * R[j] / rs;
+      var Fn = fel + gn * vn - S.cAd * Rst;           // 正值＝互斥
+      // 切向
+      var tx = vx - vn * nx, ty = vy - vn * ny, tz = vz - vn * nz, Ftx = 0, Fty = 0, Ftz = 0;
+      if (mu > 0) {
+        var hx = S.hx[h], hy = S.hx[h + 1], hz = S.hx[h + 2], hn = hx * nx + hy * ny + hz * nz;
+        hx -= hn * nx; hy -= hn * ny; hz -= hn * nz;
+        hx += tx * dt; hy += ty * dt; hz += tz * dt;
+        var gt = gn * 0.5;
+        Ftx = -kt * hx - gt * tx; Fty = -kt * hy - gt * ty; Ftz = -kt * hz - gt * tz;
+        var Ft = Math.sqrt(Ftx * Ftx + Fty * Fty + Ftz * Ftz), Fmax = mu * Math.max(0, fel);
+        if (Ft > Fmax) {
+          var sc = Ft > 0 ? Fmax / Ft : 0;
+          Ftx *= sc; Fty *= sc; Ftz *= sc;
+          hx = -(Ftx + gt * tx) / kt; hy = -(Fty + gt * ty) / kt; hz = -(Ftz + gt * tz) / kt;
+        }
+        S.hx[h] = hx; S.hx[h + 1] = hy; S.hx[h + 2] = hz;
+      }
+      // 合力：作用於 i 為 -Fn·n + Ft
+      var fx = -Fn * nx + Ftx, fy = -Fn * ny + Fty, fz = -Fn * nz + Ftz;
+      f[i3] += fx; f[i3 + 1] += fy; f[i3 + 2] += fz;
+      f[j3] -= fx; f[j3 + 1] -= fy; f[j3 + 2] -= fz;
+      if (mu > 0) { // τ = R n × Ft
+        var cx = ny * Ftz - nz * Fty, cy = nz * Ftx - nx * Ftz, cz = nx * Fty - ny * Ftx;
+        t[i3] += R[i] * cx; t[i3 + 1] += R[i] * cy; t[i3 + 2] += R[i] * cz;
+        t[j3] += R[j] * cx; t[j3 + 1] += R[j] * cy; t[j3 + 2] += R[j] * cz;
+      }
+      vir += Fn * r; ncont++; S.zc[i]++; S.zc[j]++;
+    }
+    var damp = Math.max(0, 1 - (S.p.gDamp == null ? 0.5 : S.p.gDamp) * dt), ke = 0;
+    for (var k = 0; k < N; k++) {
+      var k3 = 3 * k, im = dt / S.m[k], ii = dt / S.I[k];
+      for (var c = 0; c < 3; c++) {
+        v[k3 + c] = (v[k3 + c] + f[k3 + c] * im) * damp;
+        w[k3 + c] = (w[k3 + c] + t[k3 + c] * ii) * damp;
+        x[k3 + c] += v[k3 + c] * dt;
+        ke += 0.5 * S.m[k] * v[k3 + c] * v[k3 + c] + 0.5 * S.I[k] * w[k3 + c] * w[k3 + c];
+      }
+    }
+    var P = vir / (3 * L * L * L);
+    return { ke: ke, P: P, nc: ncont };
+  }
+
+  function scaleBox(S, fac) { S.L *= fac; for (var i = 0; i < 3 * S.N; i++) S.x[i] *= fac; }
+
+  /* 壓縮—鬆弛至目標圍壓 P0 = 1（帶寬 ±20%）；含收斂條件與最大循環數 */
+  function compress(S, opts, report) {
+    var P0 = 1, s = opts.s0 || 0.01, sNear = opts.sNear || 1.5e-3, maxCycles = opts.maxCycles || 900;
+    var maxRelax = opts.maxRelax || 3000, minRelax = opts.minRelax || 30, steps = 0, cyc = 0, res = null, hist = [];
+    var keTol = (opts.keTol || 1e-7) * S.N, maxSteps = opts.maxSteps || 4e6, conv = false, reason = '';
+    buildList(S);
+    var t0 = Date.now(), lastRep = 0;
+    for (cyc = 0; cyc < maxCycles; cyc++) {
+      for (var k = 0; k < maxRelax; k++) {
+        if (needRebuild(S)) buildList(S);
+        res = step(S); steps++;
+        if (k >= minRelax && res.ke < keTol) break;
+      }
+      var P = res.P, phi = S.Vp / (S.L * S.L * S.L);
+      hist.push([cyc, phi, P, res.ke / S.N, steps]);
+      if (report && Date.now() - lastRep > 250) { lastRep = Date.now(); report({ cyc: cyc, steps: steps, phi: phi, P: P, ke: res.ke / S.N, s: s }, S); }
+      if (P >= 0.8 * P0 && P <= 1.2 * P0 && res.ke < keTol * 10) { conv = true; reason = '圍壓落入 P0±20%，動能低於門檻'; break; }
+      if (s < 2e-6) { conv = P > 0.3 * P0 && P < 3 * P0; reason = conv ? '壓縮增量已細分至 2×10⁻⁶ 以下' : '壓縮增量細分後仍無法達目標圍壓'; break; }
+      if (steps > maxSteps) { reason = '超過最大步數上限'; break; }
+      if (P > 1.2 * P0) { scaleBox(S, 1 + s / 2); s /= 2; }
+      else { if (P > 0.02 * P0) s = Math.min(s, sNear); if (P > 0.3 * P0) s = Math.min(s, sNear / 3); scaleBox(S, 1 - s); }
+    }
+    if (!reason) reason = '達最大循環數 ' + maxCycles + '，未收斂';
+    return { converged: conv, reason: reason, cycles: cyc + 1, steps: steps, P: res.P, ke: res.ke / S.N,
+      phi: S.Vp / (S.L * S.L * S.L), hist: hist, secs: (Date.now() - t0) / 1000 };
+  }
+
+  /* 配位數（含 / 不含 rattler：接觸數 < 2 者剔除） */
+  function coordination(S) {
+    var N = S.N, z = S.zc, tot = 0;
+    for (var i = 0; i < N; i++) tot += z[i];
+    var rat = new Uint8Array(N), nr = 0;
+    for (var i2 = 0; i2 < N; i2++) if (z[i2] < 2) { rat[i2] = 1; nr++; }
+    // 重新計算非 rattler 間接觸
+    var c = 0, L = S.L;
+    for (var a = 0; a < S.np; a++) {
+      var i3 = S.pi[a], j3 = S.pj[a]; if (rat[i3] || rat[j3]) continue;
+      var dx = S.x[3 * j3] - S.x[3 * i3], dy = S.x[3 * j3 + 1] - S.x[3 * i3 + 1], dz = S.x[3 * j3 + 2] - S.x[3 * i3 + 2];
+      dx -= L * Math.round(dx / L); dy -= L * Math.round(dy / L); dz -= L * Math.round(dz / L);
+      var rs = S.R[i3] + S.R[j3]; if (dx * dx + dy * dy + dz * dz < rs * rs) c++;
+    }
+    var hist = new Array(13).fill(0);
+    for (var i4 = 0; i4 < N; i4++) hist[Math.min(12, z[i4])]++;
+    return { Zall: tot / N, Znr: (N - nr) > 0 ? 2 * c / (N - nr) : 0, rattlerFrac: nr / N, hist: hist };
+  }
+
+  /* 蒙地卡羅堆積率（全域 + 子區塊局部分布） */
+  function monteCarlo(S, nSub, nPts, seed) {
+    var r = rng(seed || 7), L = S.L, N = S.N, cs = S.dmax, nc = Math.max(1, Math.floor(L / cs)), cw = L / nc;
+    var head = new Int32Array(nc * nc * nc).fill(-1), next = new Int32Array(N);
+    for (var i = 0; i < N; i++) {
+      var ix = Math.min(nc - 1, Math.floor((((S.x[3 * i] % L) + L) % L) / cw)), iy = Math.min(nc - 1, Math.floor((((S.x[3 * i + 1] % L) + L) % L) / cw)), iz = Math.min(nc - 1, Math.floor((((S.x[3 * i + 2] % L) + L) % L) / cw));
+      var c = (ix * nc + iy) * nc + iz; next[i] = head[c]; head[c] = i;
+    }
+    function inside(px, py, pz) {
+      var cx = Math.min(nc - 1, Math.floor(px / cw)), cy = Math.min(nc - 1, Math.floor(py / cw)), cz = Math.min(nc - 1, Math.floor(pz / cw));
+      var rngC = nc < 3 ? 0 : 1;
+      for (var ax = -rngC; ax <= rngC; ax++) for (var ay = -rngC; ay <= rngC; ay++) for (var az = -rngC; az <= rngC; az++) {
+        var cells = nc < 3 ? null : (((cx + ax + nc) % nc) * nc + ((cy + ay + nc) % nc)) * nc + ((cz + az + nc) % nc);
+        var start = cells === null ? 0 : head[cells];
+        if (cells === null) {
+          for (var q = 0; q < N; q++) if (hit(q, px, py, pz)) return true;
+          return false;
+        }
+        for (var p = start; p >= 0; p = next[p]) if (hit(p, px, py, pz)) return true;
+      }
+      return false;
+    }
+    function hit(q, px, py, pz) {
+      var dx = S.x[3 * q] - px, dy = S.x[3 * q + 1] - py, dz = S.x[3 * q + 2] - pz;
+      dx -= L * Math.round(dx / L); dy -= L * Math.round(dy / L); dz -= L * Math.round(dz / L);
+      return dx * dx + dy * dy + dz * dz < S.R[q] * S.R[q];
+    }
+    var subs = [], tot = 0, totIn = 0, sw = L / nSub;
+    for (var a = 0; a < nSub; a++) for (var b = 0; b < nSub; b++) for (var c2 = 0; c2 < nSub; c2++) {
+      var inn = 0;
+      for (var k = 0; k < nPts; k++) {
+        if (inside((a + r()) * sw, (b + r()) * sw, (c2 + r()) * sw)) inn++;
+      }
+      subs.push(inn / nPts); tot += nPts; totIn += inn;
+    }
+    return { phiMC: totIn / tot, local: subs };
+  }
+
+  function runPacking(spec, report) {
+    var S = makeSystem(spec), p = spec.params;
+    placeRandom(S, p.phi0 || 0.3, p.seed || 1);
+    var c = compress(S, p.opts || {}, report);
+    var co = coordination(S);
+    var mc = monteCarlo(S, 3, p.mcPts || 1500, (p.seed || 1) + 99);
+    // 重疊修正後之實際固體體積（扣除透鏡形重疊）
+    var ov = 0, L = S.L;
+    for (var a = 0; a < S.np; a++) {
+      var i = S.pi[a], j = S.pj[a];
+      var dx = S.x[3 * j] - S.x[3 * i], dy = S.x[3 * j + 1] - S.x[3 * i + 1], dz = S.x[3 * j + 2] - S.x[3 * i + 2];
+      dx -= L * Math.round(dx / L); dy -= L * Math.round(dy / L); dz -= L * Math.round(dz / L);
+      var d = Math.sqrt(dx * dx + dy * dy + dz * dz), r1 = S.R[i], r2 = S.R[j];
+      if (d < r1 + r2) ov += Math.PI * Math.pow(r1 + r2 - d, 2) * (d * d + 2 * d * r2 - 3 * r2 * r2 + 2 * d * r1 + 6 * r1 * r2 - 3 * r1 * r1) / (12 * d);
+    }
+    var phiNet = (S.Vp - ov) / (L * L * L);
+    return {
+      phi: c.phi, phiNet: phiNet, converged: c.converged, reason: c.reason, cycles: c.cycles, steps: c.steps,
+      P: c.P, ke: c.ke, secs: c.secs, hist: c.hist, Z: co, mc: mc, N: S.N, L: S.L,
+      pos: Float32Array.from(S.x.map(function (q) { return ((q % L) + L) % L; })), rad: Float32Array.from(S.R), mat: Int32Array.from(S.mat), zc: Int32Array.from(S.zc)
+    };
+  }
+
+  /* ---- 自我檢驗用：兩球正碰 ---- */
+  function collisionTest(e, mu) {
+    var spec = { d: [1, 1], rho: [1, 1], params: { e: e, mu: mu || 0, kn: 1000, gDamp: 0, dtFac: 0.02 } };
+    var S = makeSystem(spec); S.L = 20;
+    S.x.set([5, 5, 5, 6.2, 5, 5]); S.v.set([0.5, 0, 0, -0.5, 0, 0]);
+    S.np = undefined; buildList(S); S.skin = 5; buildList(S);
+    var ke0 = 0.5 * S.m[0] * 0.25 * 2, inC = false, tc = 0, nstep = 0;
+    for (var k = 0; k < 200000; k++) {
+      var r = step(S); nstep++;
+      if (r.nc > 0) { inC = true; tc += S.dt; } else if (inC) break;
+    }
+    var vrel = S.v[0] - S.v[3];
+    var meff = S.m[0] / 2, tcTheory = Math.PI / Math.sqrt(S.kn / meff * (1 - S.zeta * S.zeta));
+    var ke1 = 0; for (var q = 0; q < 6; q++) ke1 += 0.5 * S.m[Math.floor(q / 3)] * S.v[q] * S.v[q];
+    return { eMeas: -vrel / 1.0, eSet: e, tc: tc, tcTheory: tcTheory, keRatio: ke1 / ke0 };
+  }
+
+  function fccTest() {
+    var n = 4, a = 1, pts = [], base = [[0, 0, 0], [0.5, 0.5, 0], [0.5, 0, 0.5], [0, 0.5, 0.5]];
+    for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) for (var k = 0; k < n; k++) base.forEach(function (b) { pts.push([(i + b[0]) * a, (j + b[1]) * a, (k + b[2]) * a]); });
+    var d = a / Math.SQRT2, spec = { d: pts.map(function () { return d; }), params: {} };
+    var S = makeSystem(spec); S.L = n * a; pts.forEach(function (q, i) { S.x[3 * i] = q[0]; S.x[3 * i + 1] = q[1]; S.x[3 * i + 2] = q[2]; });
+    var mc = monteCarlo(S, 2, 20000, 3);
+    return { phiExact: S.Vp / Math.pow(S.L, 3), phiMC: mc.phiMC };
+  }
+
+  return { runPacking: runPacking, collisionTest: collisionTest, fccTest: fccTest, rng: rng };
+})();
+if (typeof module !== 'undefined') module.exports = DEM;
+
+</script>
+<script>
+/* ===== 粒徑分布、配比與雙尺度組合計算 ===== */
+var PSD = (function () {
+  // 共同對數網格：0.1 μm – 2000 μm
+  var NB = 160, DMIN = 0.1, DMAXG = 2000;
+  var edges = []; for (var i = 0; i <= NB; i++) edges.push(DMIN * Math.pow(DMAXG / DMIN, i / NB));
+  var mids = []; for (var j = 0; j < NB; j++) mids.push(Math.sqrt(edges[j] * edges[j + 1]));
+
+  // RRSB 累積通過（體積）F(d) = 1 − exp[−(d/x')^n]，截斷於 [dlo, dhi]
+  function rrsbBins(xp, n, dlo, dhi) {
+    function F(d) { return 1 - Math.exp(-Math.pow(d / xp, n)); }
+    var Flo = F(dlo), Fhi = F(dhi), w = new Array(NB).fill(0);
+    for (var k = 0; k < NB; k++) {
+      var a = Math.max(edges[k], dlo), b = Math.min(edges[k + 1], dhi);
+      if (b > a) w[k] = (F(b) - F(a)) / (Fhi - Flo);
+    }
+    return w;
+  }
+  // 球體比表面積（m²/kg）：S = (6/ρ)·Σ wᵢ/dᵢ，ρ 以 kg/m³、d 以 m
+  function ssa(w, rho) {
+    var s = 0; for (var k = 0; k < NB; k++) if (w[k] > 0) s += w[k] / (mids[k] * 1e-6);
+    return 6 / (rho * 1000) * s;
+  }
+  // 由 Blaine 反解 x'（二分法）；kShape = 球體比表面積 / Blaine
+  function solveXp(blaine, rho, n, dlo, dhi, kShape) {
+    var target = blaine * (kShape || 1), lo = 0.5, hi = 200;
+    for (var it = 0; it < 80; it++) {
+      var mid = Math.sqrt(lo * hi), s = ssa(rrsbBins(mid, n, dlo, dhi), rho);
+      if (s > target) lo = mid; else hi = mid;
+    }
+    return Math.sqrt(lo * hi);
+  }
+  // 自訂粒徑分布：[[d μm, 累積通過 %], ...]，對數內插
+  function customBins(pairs) {
+    var pts = pairs.slice().sort(function (a, b) { return a[0] - b[0]; });
+    function F(d) {
+      if (d <= pts[0][0]) return pts[0][1] / 100 * (pts[0][1] > 0 && d < pts[0][0] ? Math.pow(d / pts[0][0], 1) : 1);
+      if (d >= pts[pts.length - 1][0]) return pts[pts.length - 1][1] / 100;
+      for (var i = 1; i < pts.length; i++) if (d <= pts[i][0]) {
+        var t = Math.log(d / pts[i - 1][0]) / Math.log(pts[i][0] / pts[i - 1][0]);
+        return (pts[i - 1][1] + t * (pts[i][1] - pts[i - 1][1])) / 100;
+      }
+      return 1;
+    }
+    var w = new Array(NB).fill(0), tot = 0;
+    for (var k = 0; k < NB; k++) { w[k] = Math.max(0, F(edges[k + 1]) - F(edges[k])); tot += w[k]; }
+    var lowFrac = F(edges[0]); if (lowFrac > 0) w[0] += lowFrac; tot += lowFrac;
+    return w.map(function (q) { return q / tot; });
+  }
+  // 篩分級配（mm, 通過%）→ 體積分布；各篩間假設對數均勻；<最小篩部分置於 [dfine, 最小篩]
+  function sieveBins(sieves, passing, dfine) {
+    var pts = [[dfine, 0]];
+    for (var i = sieves.length - 1; i >= 0; i--) pts.push([sieves[i] * 1000, passing[i]]);
+    return customBins(pts);
+  }
+  // 細度模數（CNS 486 / ASTM C136 定義：4.75、2.36、1.18、0.6、0.3、0.15 mm 累積停留% 之和 /100）
+  function finenessModulus(sieves, passing) {
+    var std = [4.75, 2.36, 1.18, 0.6, 0.3, 0.15], s = 0;
+    std.forEach(function (sz) {
+      var p = 100;
+      for (var i = 0; i < sieves.length; i++) if (Math.abs(sieves[i] - sz) < 1e-6) p = passing[i];
+      if (sz > Math.max.apply(null, sieves)) p = 100;
+      s += 100 - p;
+    });
+    return s / 100;
+  }
+  function quantile(w, q) {
+    var c = 0; for (var k = 0; k < NB; k++) { var c2 = c + w[k]; if (c2 >= q && w[k] > 0) { var t = (q - c) / w[k]; return edges[k] * Math.pow(edges[k + 1] / edges[k], t); } c = c2; }
+    return edges[NB];
+  }
+  function splitAt(w, dsplit) {
+    var lo = new Array(NB).fill(0), hi = new Array(NB).fill(0);
+    for (var k = 0; k < NB; k++) { if (mids[k] < dsplit) lo[k] = w[k]; else hi[k] = w[k]; }
+    return { lo: lo, hi: hi };
+  }
+
+  /* 將體積分布離散為 DEM 粒子（K 個對數等距粒徑級；窗口內滑動取最大涵蓋體積）
+     回傳：粒子直徑（無因次，最大＝1）、材料編號、截斷資訊 */
+  function discretize(comps, ratio, K, Ntarget, seed) {
+    // comps: [{w:[NB], vol:體積, id}]
+    var tot = 0, blend = new Array(NB).fill(0);
+    comps.forEach(function (c) { tot += c.vol; });
+    comps.forEach(function (c) { for (var k = 0; k < NB; k++) blend[k] += c.w[k] * c.vol / tot; });
+    var lr = Math.log(ratio), best = null;
+    for (var s = 0; s < NB; s++) {             // 窗口下限從各網格邊界試算
+      var dlo = edges[s], dhi = dlo * ratio, cov = 0;
+      for (var k = 0; k < NB; k++) if (mids[k] >= dlo && mids[k] <= dhi) cov += blend[k];
+      if (!best || cov > best.cov + 1e-9) best = { dlo: dlo, dhi: dhi, cov: cov };
+    }
+    var dlo = best.dlo, dhi = best.dhi;
+    var cls = []; for (var j = 0; j < K; j++) cls.push(dlo * Math.exp(lr * j / (K - 1)));
+    // 各材料體積分配到粒徑級（窗口外者夾至端點級）
+    var V = []; for (var c2 = 0; c2 < comps.length; c2++) V.push(new Array(K).fill(0));
+    var below = 0, above = 0;
+    comps.forEach(function (c, ci) {
+      for (var k = 0; k < NB; k++) {
+        var vv = c.w[k] * c.vol / tot; if (!vv) continue;
+        var d = mids[k], idx;
+        if (d < dlo) { idx = 0; below += vv; } else if (d > dhi) { idx = K - 1; above += vv; }
+        else { idx = Math.round(Math.log(d / dlo) / lr * (K - 1)); }
+        V[ci][idx] += vv;
+      }
+    });
+    // 數量 ∝ 體積 / d³
+    var num = 0, nk = [];
+    for (var j2 = 0; j2 < K; j2++) { var vk = 0; V.forEach(function (row) { vk += row[j2]; }); nk.push(vk / Math.pow(cls[j2], 3)); num += nk[j2]; }
+    var r = DEM_RNG(seed || 5), d = [], mat = [], counts = [];
+    for (var j3 = 0; j3 < K; j3++) {
+      var vk2 = 0; V.forEach(function (row) { vk2 += row[j3]; });
+      var n = vk2 > 0 ? Math.max(1, Math.round(Ntarget * nk[j3] / num)) : 0; counts.push(n);
+      for (var q = 0; q < n; q++) {
+        var u = r() * vk2, acc = 0, m = 0;
+        for (var ci2 = 0; ci2 < comps.length; ci2++) { acc += V[ci2][j3]; if (u <= acc) { m = ci2; break; } }
+        d.push(cls[j3] / dhi); mat.push(comps[m].id);
+      }
+    }
+    // 實際模型體積分率（數量取整後）
+    var vReal = []; for (var j4 = 0; j4 < K; j4++) vReal.push(counts[j4] * Math.pow(cls[j4], 3));
+    var vs = vReal.reduce(function (a, b) { return a + b; }, 0);
+    return { d: d, mat: mat, dlo: dlo, dhi: dhi, cls: cls, counts: counts, coverage: best.cov, below: below, above: above,
+      vTarget: V.map(function (row) { return row.slice(); }), vModel: vReal.map(function (q) { return q / vs; }), blend: blend };
+  }
+  var DEM_RNG = function (seed) { var s = (seed >>> 0) || 1; return function () { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; };
+
+  /* 雙成分無交互作用（尺寸比→∞）上限：φ = min{ φc / yc , 1 / (yc + yf/φf) }（Furnas；de Larrard 虛擬堆積之極限情形） */
+  function furnas(phiC, phiF, yC) {
+    var yF = 1 - yC;
+    var coarseDom = yC > 0 ? phiC / yC : Infinity, fineDom = 1 / (yC + yF / phiF);
+    var phi = Math.min(coarseDom, fineDom);
+    var yStar = phiC / (phiC + (1 - phiC) * phiF); // 粗料骨架恰被細料填滿之粗料體積比
+    return { phi: phi, regime: coarseDom < fineDom ? '砂骨架主導（粉體不足以填滿砂空隙）' : '粉體主導（砂粒懸浮於粉體基質中）', yStar: yStar };
+  }
+
+  /* de Larrard 可壓密堆積模型（CPM）二成分虛擬堆積式（含鬆動效應 a 與壁效應 b）
+     1 = 粗（砂）、2 = 細（粉體）；β 以 DEM 堆積率代入（近似）；a12 = √[1−(1−d2/d1)^1.02]、b21 = 1−(1−d2/d1)^1.50 */
+  function cpmBinary(b1, b2, y1, d1, d2) {
+    var y2 = 1 - y1, r = Math.min(1, d2 / d1);
+    var a12 = Math.sqrt(1 - Math.pow(1 - r, 1.02)), b21 = 1 - Math.pow(1 - r, 1.50);
+    var g1 = b1 / (1 - (1 - a12 * b1 / b2) * y2);
+    var g2 = b2 / (1 - (1 - b2 + b21 * b2 * (1 - 1 / b1)) * y1);
+    var ystar = null, lo = 0, hi = 1;
+    for (var it = 0; it < 60; it++) { var m = (lo + hi) / 2; var G1 = b1 / (1 - (1 - a12 * b1 / b2) * (1 - m)), G2 = b2 / (1 - (1 - b2 + b21 * b2 * (1 - 1 / b1)) * m); if (G1 < G2) hi = m; else lo = m; }
+    ystar = (lo + hi) / 2;
+    return { phi: Math.min(g1, g2), g1: g1, g2: g2, a: a12, b: b21, yStar: ystar,
+      regime: g1 < g2 ? '砂骨架主導（粉體不足以填滿砂空隙）' : '粉體主導（砂粒懸浮於粉體基質中）' };
+  }
+
+  return { cpmBinary: cpmBinary, NB: NB, edges: edges, mids: mids, rrsbBins: rrsbBins, ssa: ssa, solveXp: solveXp, customBins: customBins,
+    sieveBins: sieveBins, finenessModulus: finenessModulus, quantile: quantile, splitAt: splitAt, discretize: discretize, furnas: furnas };
+})();
+if (typeof module !== 'undefined') module.exports = PSD;
+
+</script>
+<script>
+/* ===== 主程式 ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (v, d) { return (v == null || !isFinite(v)) ? '—' : Number(v).toFixed(d == null ? 3 : d); };
+  var HEX = ['#5F7A99', '#E3D7B0', '#4D4A47', '#D9A85B'];
+  var MATNAME = ['水泥', '爐石粉', '飛灰', '石英砂'];
+
+  var DEF = {
+    mats: [
+      { name: '水泥', spec: 'OPC I 型、Blaine < 360 m²/kg', mass: 550, rho: 3.15, blaine: 340, n: 1.05, dlo: 0.3, dhi: 100, lim: ['lt', 360], custom: '' },
+      { name: '120 級高細爐石粉', spec: 'Blaine ≥ 480 m²/kg、高活性', mass: 150, rho: 2.90, blaine: 500, n: 1.00, dlo: 0.3, dhi: 60, lim: ['ge', 480], custom: '' },
+      { name: 'F 級飛灰', spec: '低鈣、LOI < 5%、Blaine < 300 m²/kg', mass: 550, rho: 2.25, blaine: 290, n: 0.95, dlo: 0.3, dhi: 150, lim: ['lt', 300], custom: '' }
+    ],
+    sand: { mass: 500, rho: 2.65, dfine: 20, sieves: [1.18, 0.6, 0.3, 0.15, 0.075], passing: [100, 88, 45, 12, 2] },
+    adds: [
+      { key: 'sp', name: '粉體聚羧酸強塑劑', spec: '乾拌砂漿專用型，減水率 ≥ 30%', mass: 6 },
+      { key: 'rdp', name: 'RDP 可再分散膠粉', spec: '防水抗裂型', mass: 15 },
+      { key: 'hpmc', name: 'HPMC 保水劑', spec: '黏度 20000–40000 mPa·s', mass: 1.5 },
+      { key: 'df', name: '粉體消泡劑', spec: '乾拌砂漿專用', mass: 1.5 },
+      { key: 'pva', name: '分散型 PVA 纖維', spec: '長 12 mm、直徑 40 μm、乾拌專用防結團', mass: 26, rho: 1.30 }
+    ],
+    set: { state: 'disp', preset: 'std', nrep: 3, mu_p: 0.1, mu_s: 0.5, e_rest: 0.3, P0: 5, hamaker: 6.5, z0: 0.4, frough: 0.1 }
+  };
+  var PRESET = { fast: { Np: 900, Ns: 700, R: 5 }, std: { Np: 1500, Ns: 1000, R: 6 }, fine: { Np: 2500, Ns: 1600, R: 8 } };
+  var cfg;
+
+  /* ---------- 輸入介面 ---------- */
+  function load() {
+    try { var s = localStorage.getItem('dmPack.v1'); if (s) return JSON.parse(s); } catch (e) {}
+    return JSON.parse(JSON.stringify(DEF));
+  }
+  function save() { try { localStorage.setItem('dmPack.v1', JSON.stringify(cfg)); } catch (e) {} }
+
+  function renderInputs() {
+    var h = '';
+    cfg.mats.forEach(function (m, i) {
+      h += '<div class="card mat" style="border-left-color:' + HEX[i] + '"><div class="card-header"><span class="swatch" style="background:' + HEX[i] + '"></span><h3>' + m.name + '</h3><span class="spec">規格：' + m.spec + '</span></div>' +
+        '<div class="grid">' +
+        fld('用量（kg）', 'm' + i + '_mass', m.mass, 1) + fld('密度（g/cm³）', 'm' + i + '_rho', m.rho, 0.01) +
+        fld('Blaine（m²/kg）', 'm' + i + '_blaine', m.blaine, 5) + fld('RRSB 均勻性指數 n', 'm' + i + '_n', m.n, 0.05) +
+        fld('粒徑下限（μm）', 'm' + i + '_dlo', m.dlo, 0.1) + fld('粒徑上限（μm）', 'm' + i + '_dhi', m.dhi, 5) +
+        '</div><div class="row" style="margin-top:6px"><span id="m' + i + '_chk"></span><span class="note" id="m' + i + '_info"></span></div>' +
+        '<details style="margin-top:6px"' + (m.custom ? ' open' : '') + '><summary class="note" style="cursor:pointer">貼上雷射粒徑分析（自訂粒徑分布）</summary><label>每行一組：粒徑（μm）與累積通過（%），至少 3 行；清空則改回 RRSB<textarea id="m' + i + '_custom" placeholder="例：10 52">' + (m.custom || '') + '</textarea></label></details></div>';
+    });
+    $('matCards').innerHTML = h;
+    $('sand_mass').value = cfg.sand.mass; $('sand_rho').value = cfg.sand.rho; $('sand_dfine').value = cfg.sand.dfine;
+    var sb = '';
+    cfg.sand.sieves.forEach(function (s, i) {
+      sb += '<tr><td data-label="篩號">' + s + ' mm</td><td data-label="累積通過（%）"><input type="number" id="sv' + i + '" value="' + cfg.sand.passing[i] + '" step="1" style="max-width:110px"></td><td data-label="累積停留（%）" id="sr' + i + '"></td></tr>';
+    });
+    $('sieveBody').innerHTML = sb;
+    var ah = '';
+    cfg.adds.forEach(function (a, i) {
+      ah += '<div class="card"><div class="card-header"><h3>' + a.name + '</h3><span class="spec">規格：' + a.spec + '</span></div><div class="grid">' + fld('用量（kg）', 'a' + i + '_mass', a.mass, 0.1) + '</div></div>';
+    });
+    $('addCards').innerHTML = ah;
+    Object.keys(cfg.set).forEach(function (k) { if ($(k)) $(k).value = cfg.set[k]; });
+    bindInputs(); updateChecks();
+  }
+  function fld(lbl, id, v, st) { return '<label>' + lbl + '<input type="number" id="' + id + '" value="' + v + '" step="' + st + '"></label>'; }
+  function num(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+
+  function readInputs() {
+    cfg.mats.forEach(function (m, i) {
+      ['mass', 'rho', 'blaine', 'n', 'dlo', 'dhi'].forEach(function (k) { m[k] = num('m' + i + '_' + k); });
+      m.custom = $('m' + i + '_custom').value;
+    });
+    cfg.sand.mass = num('sand_mass'); cfg.sand.rho = num('sand_rho'); cfg.sand.dfine = num('sand_dfine');
+    cfg.sand.passing = cfg.sand.sieves.map(function (s, i) { return num('sv' + i); });
+    cfg.adds.forEach(function (a, i) { a.mass = num('a' + i + '_mass'); });
+    Object.keys(cfg.set).forEach(function (k) { if ($(k)) cfg.set[k] = (k === 'state' || k === 'preset') ? $(k).value : num(k); });
+    save();
+  }
+  function bindInputs() {
+    document.querySelectorAll('#tab-input input, #tab-input select, #tab-input textarea').forEach(function (el) {
+      el.addEventListener('change', function () {
+        if (el.id === 'state') $('mu_p').value = el.value === 'dry' ? 0.5 : 0.1;
+        readInputs(); updateChecks();
+      });
+    });
+  }
+  function parseCustom(txt) {
+    var pts = [];
+    (txt || '').split(/\n/).forEach(function (l) { var a = l.trim().split(/[\s,，\t]+/).map(parseFloat); if (a.length >= 2 && a[0] > 0 && isFinite(a[1])) pts.push([a[0], a[1]]); });
+    return pts.length >= 3 ? pts : null;
+  }
+
+  /* ---------- 模型建構 ---------- */
+  var model = null;
+  function buildModel() {
+    readInputs();
+    var mats = cfg.mats.map(function (m, i) {
+      var cp = parseCustom(m.custom), w, xp = null;
+      if (cp) w = PSD.customBins(cp); else { xp = PSD.solveXp(m.blaine, m.rho, m.n, m.dlo, m.dhi, 1); w = PSD.rrsbBins(xp, m.n, m.dlo, m.dhi); }
+      return { i: i, name: m.name, w: w, xp: xp, custom: !!cp, ssa: PSD.ssa(w, m.rho), vol: m.mass / m.rho, mass: m.mass, rho: m.rho,
+        d10: PSD.quantile(w, 0.1), d50: PSD.quantile(w, 0.5), d90: PSD.quantile(w, 0.9) };
+    });
+    var s = cfg.sand, ws = PSD.sieveBins(s.sieves, s.passing, s.dfine), sp = PSD.splitAt(ws, 75);
+    var fFine = sp.lo.reduce(function (a, b) { return a + b; }, 0);
+    var norm = function (arr, t) { return arr.map(function (q) { return t > 0 ? q / t : 0; }); };
+    var sandVol = s.mass / s.rho;
+    var pr = PRESET[cfg.set.preset];
+    var powderComps = mats.map(function (m) { return { w: m.w, vol: m.vol, id: m.i }; });
+    if (fFine > 0) powderComps.push({ w: norm(sp.lo, fFine), vol: sandVol * fFine, id: 3 });
+    var wsC = norm(sp.hi, 1 - fFine), sandComps = [{ w: wsC, vol: sandVol * (1 - fFine), id: 3 }];
+    var dp = PSD.discretize(powderComps, pr.R, 6, pr.Np, 11);
+    var ds = PSD.discretize(sandComps, pr.R, 6, pr.Ns, 13);
+    var Vp = powderComps.reduce(function (a, c) { return a + c.vol; }, 0), Vs = sandComps[0].vol;
+    var pva = cfg.adds[4];
+    model = { mats: mats, ws: ws, wsC: wsC, fFine: fFine, sandVol: sandVol, dp: dp, ds: ds, Vp: Vp, Vs: Vs, pr: pr,
+      FM: PSD.finenessModulus(s.sieves, s.passing), pvaVol: pva.mass / pva.rho,
+      Mpart: mats.reduce(function (a, m) { return a + m.mass; }, 0) + s.mass,
+      B: mats.reduce(function (a, m) { return a + m.mass; }, 0), cfg: JSON.parse(JSON.stringify(cfg)) };
+    return model;
+  }
+
+  function updateChecks() {
+    var m = buildModel();
+    m.mats.forEach(function (q, i) {
+      var lim = cfg.mats[i].lim, b = cfg.mats[i].blaine, ok = lim[0] === 'lt' ? b < lim[1] : b >= lim[1];
+      $('m' + i + '_chk').innerHTML = '<span class="badge ' + (ok ? 'ok' : 'bad') + '">Blaine ' + (ok ? '符合' : '不符') + '規格</span>';
+      $('m' + i + '_info').textContent = (q.custom ? '自訂分布' : 'RRSB x′ = ' + fmt(q.xp, 1) + ' μm') + '，D10/D50/D90 = ' + fmt(q.d10, 1) + ' / ' + fmt(q.d50, 1) + ' / ' + fmt(q.d90, 1) + ' μm，球體比表面積 ' + fmt(q.ssa, 0) + ' m²/kg';
+    });
+    cfg.sand.sieves.forEach(function (s, i) { $('sr' + i).textContent = fmt(100 - cfg.sand.passing[i], 0); });
+    var p = cfg.sand.passing, fmOk = m.FM >= 1.4 && m.FM <= 1.6, dOk = p[0] >= 100, fOk = p[4] < 3;
+    $('sandChecks').innerHTML = badge(fmOk, 'FM = ' + fmt(m.FM, 2)) + badge(dOk, '1.18 mm 通過 ' + p[0] + '%') + badge(fOk, '0.075 mm 通過 ' + p[4] + '%');
+    var dry = cfg.set.state === 'dry';
+    $('dryOpts').style.display = dry ? '' : 'none';
+    $('stateNote').textContent = dry ? '乾粉態：對應乾拌砂漿成品之鬆裝／袋裝狀態（圍壓預設 5 kPa ≈ 0.4 m 粉體自重），黏附力依 Hamaker 常數計算。' :
+      '分散態：對應加水拌合且強塑劑充分分散之狀態，顆粒間無黏附、接觸潤滑（μ 取低值），用於推估填滿空隙之最小需水量。';
+  }
+  function badge(ok, t) { return '<span class="badge ' + (ok ? 'ok' : 'bad') + '">' + t + '</span> '; }
+
+  /* ---------- 圖表（SVG） ---------- */
+  function lineChart(o) {
+    var W = 640, H = 320, ml = 52, mr = 14, mt = 14, mb = 44, pw = W - ml - mr, ph = H - mt - mb;
+    var xs = function (x) { return o.logx ? (Math.log10(x) - Math.log10(o.xmin)) / (Math.log10(o.xmax) - Math.log10(o.xmin)) : (x - o.xmin) / (o.xmax - o.xmin); };
+    var ys = function (y) { return (y - o.ymin) / (o.ymax - o.ymin); };
+    var g = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (o.title || '圖表') + '">';
+    var xt = o.xticks || [], yt = o.yticks || [];
+    xt.forEach(function (t) { var X = ml + xs(t) * pw; g += '<line x1="' + X + '" y1="' + mt + '" x2="' + X + '" y2="' + (mt + ph) + '" stroke="#E3ECF7"/><text x="' + X + '" y="' + (mt + ph + 16) + '" font-size="11" text-anchor="middle" fill="#5B6B7F">' + t + '</text>'; });
+    yt.forEach(function (t) { var Y = mt + ph - ys(t) * ph; g += '<line x1="' + ml + '" y1="' + Y + '" x2="' + (ml + pw) + '" y2="' + Y + '" stroke="#E3ECF7"/><text x="' + (ml - 6) + '" y="' + (Y + 4) + '" font-size="11" text-anchor="end" fill="#5B6B7F">' + t + '</text>'; });
+    g += '<rect x="' + ml + '" y="' + mt + '" width="' + pw + '" height="' + ph + '" fill="none" stroke="#C9D6E8"/>';
+    (o.series || []).forEach(function (s) {
+      var d = ''; s.pts.forEach(function (p, k) {
+        if (o.logx && p[0] <= 0) return;
+        var X = ml + Math.max(0, Math.min(1, xs(p[0]))) * pw, Y = mt + ph - Math.max(0, Math.min(1, ys(p[1]))) * ph; d += (d ? 'L' : 'M') + X.toFixed(1) + ' ' + Y.toFixed(1);
+      });
+      g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="' + (s.w || 2) + '"' + (s.dash ? ' stroke-dasharray="' + s.dash + '"' : '') + '/>';
+    });
+    (o.bands || []).forEach(function (b) { var Y1 = mt + ph - ys(b[1]) * ph, Y0 = mt + ph - ys(b[0]) * ph; g += '<rect x="' + ml + '" y="' + Y1 + '" width="' + pw + '" height="' + (Y0 - Y1) + '" fill="' + b[2] + '" opacity="0.18"/>'; });
+    g += '<text x="' + (ml + pw / 2) + '" y="' + (H - 6) + '" font-size="12" text-anchor="middle" fill="#1C2E4A">' + (o.xlabel || '') + '</text>';
+    g += '<text x="14" y="' + (mt + ph / 2) + '" font-size="12" text-anchor="middle" fill="#1C2E4A" transform="rotate(-90 14 ' + (mt + ph / 2) + ')">' + (o.ylabel || '') + '</text></svg>';
+    return g;
+  }
+  function barChart(vals, labels, o) {
+    var W = 640, H = 240, ml = 44, mb = 36, mt = 12, pw = W - ml - 10, ph = H - mt - mb, mx = Math.max.apply(null, vals.concat([1e-9]));
+    var bw = pw / vals.length, g = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (o.title || '') + '">';
+    vals.forEach(function (v, i) {
+      var h = v / mx * ph, X = ml + i * bw;
+      g += '<rect x="' + (X + bw * 0.15) + '" y="' + (mt + ph - h) + '" width="' + (bw * 0.7) + '" height="' + h + '" fill="' + (o.color || '#1C2E4A') + '"/>';
+      g += '<text x="' + (X + bw / 2) + '" y="' + (mt + ph + 14) + '" font-size="11" text-anchor="middle" fill="#5B6B7F">' + labels[i] + '</text>';
+    });
+    g += '<line x1="' + ml + '" y1="' + (mt + ph) + '" x2="' + (ml + pw) + '" y2="' + (mt + ph) + '" stroke="#C9D6E8"/>';
+    g += '<text x="' + (ml + pw / 2) + '" y="' + (H - 4) + '" font-size="12" text-anchor="middle" fill="#1C2E4A">' + (o.xlabel || '') + '</text>';
+    g += '<text x="12" y="' + (mt + ph / 2) + '" font-size="12" text-anchor="middle" fill="#1C2E4A" transform="rotate(-90 12 ' + (mt + ph / 2) + ')">' + (o.ylabel || '') + '</text></svg>';
+    return g;
+  }
+  function cum(w) { var c = 0, pts = []; for (var k = 0; k < PSD.NB; k++) { c += w[k]; pts.push([PSD.edges[k + 1], c * 100]); } return pts; }
+
+  function renderProcess() {
+    var m = model, series = [], leg = '';
+    m.mats.forEach(function (q, i) { series.push({ color: HEX[i], pts: cum(q.w) }); leg += '<span><i class="swatch" style="background:' + HEX[i] + '"></i>' + MATNAME[i] + '</span>'; });
+    series.push({ color: HEX[3], pts: cum(m.ws), w: 2.5 }); leg += '<span><i class="swatch" style="background:' + HEX[3] + '"></i>石英砂</span>';
+    series.push({ color: '#D4450C', pts: cum(m.dp.blend), w: 3, dash: '6 4' }); leg += '<span><i class="swatch" style="background:#D4450C"></i>粉體尺度合成</span>';
+    $('psdChart').innerHTML = lineChart({ series: series, logx: true, xmin: 0.1, xmax: 2000, ymin: 0, ymax: 100, xticks: [0.1, 1, 10, 75, 1000], yticks: [0, 20, 40, 60, 80, 100], xlabel: '粒徑（μm，對數）', ylabel: '累積通過（%）', title: '粒徑分布' });
+    $('psdLegend').innerHTML = leg;
+    var h = '';
+    [['粉體尺度', m.dp, true], ['砂尺度', m.ds, false]].forEach(function (z) {
+      var d = z[1], scale = d.dhi, warnFew = d.counts[d.counts.length - 1] < 10;
+      h += '<div class="card' + ((d.below + d.above) > 0.25 || warnFew ? ' warnbox' : '') + '"><div class="card-header"><h3>' + z[0] + '：窗口 ' + fmt(d.dlo, 1) + '–' + fmt(d.dhi, 1) + ' μm（粒徑比 ' + model.pr.R + '）</h3></div>' +
+        '<p class="note">窗口內涵蓋體積 ' + fmt(d.coverage * 100, 1) + '%；細端被夾 ' + fmt(d.below * 100, 1) + '%、粗端被夾 ' + fmt(d.above * 100, 1) + '%；模型顆粒數 ' + d.d.length + '。' + (warnFew ? '<b>最大粒徑級僅 ' + d.counts[d.counts.length - 1] + ' 顆，單組結果受少數大顆粒位置影響，請以 3 組以上亂數種子平均。</b>' : '') + '</p>' +
+        '<table class="rt"><thead><tr><th>粒徑級</th><th>直徑（μm）</th><th>顆粒數</th><th>目標體積（%）</th><th>模型體積（%）</th></tr></thead><tbody>';
+      var vt = []; for (var k = 0; k < d.cls.length; k++) { var s = 0; d.vTarget.forEach(function (r) { s += r[k]; }); vt.push(s); }
+      var tvt = vt.reduce(function (a, b) { return a + b; }, 0);
+      d.cls.forEach(function (c, k) {
+        h += '<tr><td data-label="粒徑級">第 ' + (k + 1) + ' 級</td><td data-label="直徑（μm）">' + fmt(c, 2) + '</td><td data-label="顆粒數">' + d.counts[k] + '</td><td data-label="目標體積（%）">' + fmt(vt[k] / tvt * 100, 1) + '</td><td data-label="模型體積（%）">' + fmt(d.vModel[k] * 100, 1) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    });
+    $('discInfo').innerHTML = h;
+  }
+
+  /* ---------- 3D 檢視 ---------- */
+  var view = { yaw: 0.6, pitch: 0.45, zoom: 1, data: null, mode: 'mat', sel: 'live', seed: 0, store: { p: [], s: [] } };
+  var SCALENAME = { p: '粉體尺度', s: '砂尺度' };
+  var cv = $('viewer'), ctx = cv.getContext('2d');
+  function sizeCanvas() { var r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; cv.width = Math.max(300, r.width * dpr); cv.height = cv.width; draw(); }
+  function zColor(z) { var t = Math.min(1, z / 10); var c = [[42, 74, 120], [95, 160, 190], [240, 200, 90], [212, 69, 12]]; var s = t * 3, i = Math.min(2, Math.floor(s)), f = s - i; return 'rgb(' + c[i].map(function (a, k) { return Math.round(a + (c[i + 1][k] - a) * f); }).join(',') + ')'; }
+  function sizeColor(d, id) {
+    if (!d.rmax) { var mx = 0, mn = Infinity; for (var i = 0; i < d.rad.length; i++) { mx = Math.max(mx, d.rad[i]); mn = Math.min(mn, d.rad[i]); } d.rmax = mx; d.rmin = mn; }
+    var t = d.rmax > d.rmin ? Math.log(d.rad[id] / d.rmin) / Math.log(d.rmax / d.rmin) : 0.5;
+    return zColor(t * 10);
+  }
+  function draw() {
+    var W = cv.width, H = cv.height; ctx.fillStyle = '#14243B'; ctx.fillRect(0, 0, W, H);
+    var d = view.data; if (!d) return;
+    var cy = Math.cos(view.yaw), sy = Math.sin(view.yaw), cp = Math.cos(view.pitch), sp = Math.sin(view.pitch), S = W * 0.52 * view.zoom, ox = W / 2, oy = H / 2;
+    function proj(x, y, z) { var X = cy * x + sy * z, Z = -sy * x + cy * z; var Y = cp * y - sp * Z, Z2 = sp * y + cp * Z; return [ox + X * S, oy - Y * S, Z2]; }
+    var corners = []; for (var a = 0; a < 8; a++) corners.push(proj((a & 1) - 0.5, ((a >> 1) & 1) - 0.5, ((a >> 2) & 1) - 0.5));
+    ctx.strokeStyle = 'rgba(201,214,232,.35)'; ctx.lineWidth = Math.max(1, W / 600);
+    [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]].forEach(function (e) { ctx.beginPath(); ctx.moveTo(corners[e[0]][0], corners[e[0]][1]); ctx.lineTo(corners[e[1]][0], corners[e[1]][1]); ctx.stroke(); });
+    var n = d.rad.length, P = new Array(n);
+    for (var i = 0; i < n; i++) { var p = proj(d.pos[3 * i] - 0.5, d.pos[3 * i + 1] - 0.5, d.pos[3 * i + 2] - 0.5); P[i] = [p[0], p[1], p[2], i]; }
+    P.sort(function (u, v) { return u[2] - v[2]; });
+    for (var k = 0; k < n; k++) {
+      var q = P[k], id = q[3], r = d.rad[id] * S; if (r < 0.4) r = 0.4;
+      var col = view.mode === 'z' && d.zc ? zColor(d.zc[id]) : view.mode === 'size' ? sizeColor(d, id) : HEX[d.mat[id]];
+      ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, 6.2832); ctx.fillStyle = col; ctx.fill();
+      if (r > 2.5) { ctx.beginPath(); ctx.arc(q[0] - r * 0.32, q[1] - r * 0.32, r * 0.35, 0, 6.2832); ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fill();
+        ctx.lineWidth = Math.max(0.5, r * 0.06); ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, 6.2832); ctx.stroke(); }
+    }
+  }
+  (function bindViewer() {
+    var pts = {}, last = null, pinch = null;
+    cv.addEventListener('pointerdown', function (e) { cv.setPointerCapture(e.pointerId); pts[e.pointerId] = [e.clientX, e.clientY]; last = [e.clientX, e.clientY]; });
+    cv.addEventListener('pointermove', function (e) {
+      if (!pts[e.pointerId]) return; pts[e.pointerId] = [e.clientX, e.clientY];
+      var ids = Object.keys(pts);
+      if (ids.length === 2) { var a = pts[ids[0]], b = pts[ids[1]], dd = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) view.zoom = Math.max(0.4, Math.min(4, view.zoom * dd / pinch)); pinch = dd; draw(); return; }
+      if (last) { view.yaw += (e.clientX - last[0]) * 0.01; view.pitch = Math.max(-1.5, Math.min(1.5, view.pitch + (e.clientY - last[1]) * 0.01)); }
+      last = [e.clientX, e.clientY]; draw();
+    });
+    function up(e) { delete pts[e.pointerId]; pinch = null; last = null; }
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('wheel', function (e) { e.preventDefault(); view.zoom = Math.max(0.4, Math.min(4, view.zoom * (e.deltaY < 0 ? 1.1 : 0.9))); draw(); }, { passive: false });
+    $('colorMode').addEventListener('change', function () { view.mode = this.value; legendView(); draw(); });
+    $('scaleSel').addEventListener('change', function () { view.sel = this.value; view.seed = 0; refreshSeeds(); showSelected(); });
+    $('seedSel').addEventListener('change', function () { view.seed = parseInt(this.value, 10) || 0; showSelected(); });
+    window.addEventListener('resize', sizeCanvas);
+  })();
+  function legendView() {
+    var d = view.data;
+    if (view.mode === 'size') {
+      if (!d || !d.dhi) { $('viewLegend').innerHTML = '<span class="note">尚無資料</span>'; return; }
+      if (!d.rmax) sizeColor(d, 0);
+      var dlo = d.dhi * d.rmin / d.rmax, h = '';
+      for (var k = 0; k <= 4; k++) { var dd = dlo * Math.pow(d.dhi / dlo, k / 4); h += '<span><i class="swatch" style="background:' + zColor(k * 2.5) + '"></i>' + fmt(dd, dd < 10 ? 1 : 0) + ' μm</span>'; }
+      $('viewLegend').innerHTML = h; return;
+    }
+    var present = [0, 1, 2, 3];
+    if (d && d.mat) { var seen = {}; for (var q = 0; q < d.mat.length; q++) seen[d.mat[q]] = 1; present = present.filter(function (i) { return seen[i]; }); }
+    $('viewLegend').innerHTML = view.mode === 'mat' ? present.map(function (i) { return '<span><i class="swatch" style="background:' + HEX[i] + '"></i>' + MATNAME[i] + '</span>'; }).join('') :
+      [0, 2, 4, 6, 8, 10].map(function (z) { return '<span><i class="swatch" style="background:' + zColor(z) + '"></i>Z=' + z + (z === 10 ? '+' : '') + '</span>'; }).join('');
+  }
+
+  function setView(data) { view.data = data; legendView(); draw(); }
+  function refreshSeeds() {
+    var sel = $('seedSel');
+    if (view.sel === 'live') { sel.innerHTML = '<option>—</option>'; sel.disabled = true; return; }
+    var arr = view.store[view.sel];
+    sel.innerHTML = arr.length ? arr.map(function (r, k) { return '<option value="' + k + '"' + (k === view.seed ? ' selected' : '') + '>第 ' + (r.rep + 1) + ' 組</option>'; }).join('') : '<option>尚未完成</option>';
+    sel.disabled = !arr.length;
+  }
+  function showSelected() {
+    if (view.sel === 'live') { $('hudSub').textContent = run && run.idx < run.jobs.length ? '跟隨目前計算中…' : '計算已結束；請選擇尺度檢視'; if (view.last) setView(view.last); return; }
+    var r = view.store[view.sel][view.seed];
+    if (!r) { setView(null); $('hudPhi').textContent = '—'; $('hudSub').textContent = SCALENAME[view.sel] + '尚未完成計算'; return; }
+    setView(r.data);
+    $('hudPhi').textContent = 'φ = ' + fmt(r.phi, 4);
+    $('hudSub').textContent = SCALENAME[view.sel] + '　第 ' + (r.rep + 1) + ' 組　' + (r.conv ? '已收斂' : '未收斂') + '　Z = ' + fmt(r.Z, 2) + '　' + r.n + ' 顆';
+  }
+
+  /* ---------- Worker ---------- */
+  var worker = null;
+  function makeWorker() {
+    var glue = '\nself.onmessage=function(ev){var m=ev.data;' +
+      'if(m.cmd==="run"){var last=0;var res=DEM.runPacking(m.spec,function(info,S){var now=Date.now(),msg={type:"progress",job:m.job,info:info};' +
+      'if(now-last>800){last=now;var L=S.L,n=S.N,pos=new Float32Array(3*n),rad=new Float32Array(n);for(var i=0;i<3*n;i++)pos[i]=((S.x[i]%L)+L)%L/L;for(var j=0;j<n;j++)rad[j]=S.R[j]/L;msg.snap={pos:pos,rad:rad,mat:Int32Array.from(S.mat),zc:Int32Array.from(S.zc)};}' +
+      'self.postMessage(msg);});self.postMessage({type:"done",job:m.job,res:res});}' +
+      'else if(m.cmd==="test"){var out={};' +
+      'out.c5=DEM.collisionTest(0.5,0);self.postMessage({type:"t",k:"c5",v:out.c5});' +
+      'out.c1=DEM.collisionTest(1.0,0);self.postMessage({type:"t",k:"c1",v:out.c1});' +
+      'out.fcc=DEM.fccTest();self.postMessage({type:"t",k:"fcc",v:out.fcc});' +
+      'function mono(N,mu,dtf,seed){var d=[];for(var i=0;i<N;i++)d.push(1);var r=DEM.runPacking({d:d,params:{mu:mu,e:0.3,kn:1000,phi0:0.3,seed:seed,dtFac:dtf}});return {phi:r.phiNet,Z:r.Z.Znr,conv:r.converged,secs:r.secs};}' +
+      'self.postMessage({type:"t",k:"m0",v:mono(500,0,0.12,1)});' +
+      'self.postMessage({type:"t",k:"m1",v:mono(500,1.0,0.12,1)});' +
+      'var a=mono(300,0.5,0.12,2),b=mono(300,0.5,0.06,2);self.postMessage({type:"t",k:"dt",v:{a:a,b:b}});' +
+      'self.postMessage({type:"tdone"});}};';
+    var src = $('engine-src').textContent + glue;
+    return new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+  }
+
+  /* ---------- 執行模擬 ---------- */
+  var run = null;
+  function logLine(t) { var d = document.createElement('div'); d.textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false }) + '　' + t; $('log').prepend(d); }
+  function cAdFor(dhi) {
+    var s = cfg.set; if (s.state !== 'dry') return 0;
+    var A = s.hamaker * 1e-20 * s.frough, z0 = s.z0 * 1e-9, P0 = s.P0 * 1e3, dref = dhi * 1e-6;
+    return A / (12 * z0 * z0 * P0 * dref);
+  }
+  function startRun() {
+    buildModel(); renderProcess(); switchTab('proc'); setTimeout(function () { var t = $('liveHead'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+    var m = model, s = cfg.set, jobs = [], nrep = Math.max(1, Math.min(10, Math.round(s.nrep)));
+    for (var r = 0; r < nrep; r++) jobs.push({ scale: 'p', rep: r, spec: { d: m.dp.d, mat: m.dp.mat, rho: m.dp.mat.map(function (k) { return k < 3 ? m.mats[k].rho : cfg.sand.rho; }),
+      params: { mu: s.mu_p, e: s.e_rest, kn: 1000, phi0: 0.3, seed: 101 + 17 * r, massScale: true, cAd: cAdFor(m.dp.dhi) } } });
+    for (var r2 = 0; r2 < nrep; r2++) jobs.push({ scale: 's', rep: r2, spec: { d: m.ds.d, mat: m.ds.mat, rho: m.ds.mat.map(function () { return cfg.sand.rho; }),
+      params: { mu: s.mu_s, e: s.e_rest, kn: 1000, phi0: 0.3, seed: 211 + 17 * r2, massScale: true, cAd: cAdFor(m.ds.dhi) } } });
+    run = { jobs: jobs, idx: 0, res: [], hist: [], cur: [], t0: Date.now() };
+    view.store = { p: [], s: [] }; view.sel = 'live'; view.seed = 0; view.last = null; $('scaleSel').value = 'live'; refreshSeeds();
+    if (worker) worker.terminate(); worker = makeWorker(); worker.onmessage = onMsg;
+    $('runBtn').disabled = true; $('stopBtn').disabled = false; $('log').innerHTML = '';
+    logLine('模型建構完成：粉體 ' + m.dp.d.length + ' 顆、砂 ' + m.ds.d.length + ' 顆，共 ' + jobs.length + ' 組計算。');
+    nextJob();
+  }
+  function nextJob() {
+    if (run.idx >= run.jobs.length) return finish();
+    var j = run.jobs[run.idx]; run.cur = [];
+    $('jobTitle').textContent = (j.scale === 'p' ? '粉體尺度' : '砂尺度') + '　第 ' + (j.rep + 1) + ' 組亂數種子（' + (run.idx + 1) + ' / ' + run.jobs.length + '）';
+    worker.postMessage({ cmd: 'run', job: run.idx, spec: j.spec });
+  }
+  function onMsg(ev) {
+    var m = ev.data;
+    if (m.type === 'progress' && run) {
+      var i = m.info; run.cur.push([i.cyc, i.phi]);
+      var jc = run.jobs[run.idx];
+      if (view.sel === 'live') { $('hudPhi').textContent = 'φ = ' + fmt(i.phi, 4); $('hudSub').textContent = SCALENAME[jc.scale] + ' 第 ' + (jc.rep + 1) + ' 組　循環 ' + i.cyc + '　P/P₀ = ' + fmt(i.P, 3); }
+      var frac = (run.idx + Math.min(0.95, i.phi / 0.75)) / run.jobs.length; $('jobBar').style.width = (frac * 100).toFixed(1) + '%';
+      $('jobText').textContent = '已耗時 ' + Math.round((Date.now() - run.t0) / 1000) + ' 秒；壓縮增量 ' + i.s.toExponential(1);
+      if (m.snap) { m.snap.dhi = jc.scale === 'p' ? model.dp.dhi : model.ds.dhi; view.last = m.snap; if (view.sel === 'live') setView(m.snap); }
+      if (run.cur.length % 4 === 0) drawConv();
+    } else if (m.type === 'done' && run) {
+      var r = m.res, j = run.jobs[m.job]; r.scale = j.scale; r.rep = j.rep; run.res.push(r); run.hist.push({ scale: j.scale, pts: r.hist.map(function (h) { return [h[0], h[1]]; }) });
+      var vd = { pos: r.pos.map(function (q) { return q / r.L; }), rad: r.rad.map(function (q) { return q / r.L; }), mat: r.mat, zc: r.zc, dhi: j.scale === 'p' ? model.dp.dhi : model.ds.dhi };
+      view.store[j.scale].push({ data: vd, phi: r.phiNet, conv: r.converged, rep: j.rep, Z: r.Z.Znr, n: r.N });
+      view.last = vd;
+      if (view.sel === 'live') { setView(vd); $('hudPhi').textContent = 'φ = ' + fmt(r.phiNet, 4); $('hudSub').textContent = SCALENAME[j.scale] + ' 第 ' + (j.rep + 1) + ' 組　' + (r.converged ? '已收斂' : '未收斂') + '　' + r.cycles + ' 循環　' + fmt(r.secs, 1) + ' 秒'; }
+      else if (view.sel === j.scale) { refreshSeeds(); showSelected(); }
+      logLine((j.scale === 'p' ? '粉體' : '砂') + '第 ' + (j.rep + 1) + ' 組：φ = ' + fmt(r.phiNet, 4) + '，Z = ' + fmt(r.Z.Znr, 2) + '，' + r.reason + '（' + r.steps + ' 步、' + fmt(r.secs, 1) + ' 秒）');
+      run.cur = []; drawConv(); run.idx++; nextJob();
+    } else if (m.type === 't') testResult(m.k, m.v);
+    else if (m.type === 'tdone') { $('testBtn').disabled = false; logTestSummary(); }
+  }
+  function drawConv() {
+    if (!run) return;
+    var cols = { p: '#5F7A99', s: '#D9A85B' }, series = run.hist.map(function (h) { return { color: cols[h.scale], pts: h.pts, w: 1.6 }; });
+    if (run.cur.length) series.push({ color: '#D4450C', pts: run.cur, w: 2.5 });
+    var mx = 10; run.hist.forEach(function (h) { mx = Math.max(mx, h.pts.length); }); mx = Math.max(mx, run.cur.length ? run.cur[run.cur.length - 1][0] + 1 : 0);
+    $('convChart').innerHTML = lineChart({ series: series, xmin: 0, xmax: mx, ymin: 0.3, ymax: 0.8, yticks: [0.3, 0.4, 0.5, 0.6, 0.7, 0.8], xticks: [0, Math.round(mx / 2), mx], xlabel: '壓縮循環次數', ylabel: '堆積率 φ', title: '收斂歷程' }) +
+      '<div class="legend"><span><i class="swatch" style="background:#5F7A99"></i>粉體尺度</span><span><i class="swatch" style="background:#D9A85B"></i>砂尺度</span><span><i class="swatch" style="background:#D4450C"></i>進行中</span></div>';
+  }
+  function stopRun() { if (worker) worker.terminate(); worker = null; $('runBtn').disabled = false; $('stopBtn').disabled = true; logLine('已由使用者停止模擬。'); run = null; }
+
+  /* ---------- 成果 ---------- */
+  var summary = null;
+  function stats(arr) { var n = arr.length; if (!n) return { mean: NaN, sd: NaN, n: 0 }; var mu = arr.reduce(function (a, b) { return a + b; }, 0) / n; var sd = n > 1 ? Math.sqrt(arr.reduce(function (a, b) { return a + (b - mu) * (b - mu); }, 0) / (n - 1)) : 0; return { mean: mu, sd: sd, n: n }; }
+  function finish() {
+    $('runBtn').disabled = false; $('stopBtn').disabled = true; $('jobBar').style.width = '100%';
+    var m = model, rp = run.res.filter(function (r) { return r.scale === 'p'; }), rs = run.res.filter(function (r) { return r.scale === 's'; });
+    var cp = rp.filter(function (r) { return r.converged; }), cs = rs.filter(function (r) { return r.converged; });
+    var sp = stats(cp.map(function (r) { return r.phiNet; })), ss = stats(cs.map(function (r) { return r.phiNet; }));
+    var zp = stats(cp.map(function (r) { return r.Z.Znr; })), zs = stats(cs.map(function (r) { return r.Z.Znr; }));
+    var ys = m.Vs / (m.Vs + m.Vp), d1 = PSD.quantile(m.wsC, 0.5), d2 = PSD.quantile(m.dp.blend, 0.5);
+    var mix = PSD.cpmBinary(ss.mean, sp.mean, ys, d1, d2);
+    var cands = [];
+    [-1, 1].forEach(function (a) { [-1, 1].forEach(function (b) { cands.push(PSD.cpmBinary(ss.mean + a * ss.sd, sp.mean + b * sp.sd, ys, d1, d2).phi); }); });
+    var mixLo = Math.min.apply(null, cands), mixHi = Math.max.apply(null, cands);
+    var Vsol = m.Vp + m.Vs, e = (1 - mix.phi) / mix.phi;
+    var fur = PSD.furnas(ss.mean, sp.mean, ys);
+    var local = []; cp.forEach(function (r) { local = local.concat(r.mc.local); });
+    var ls = stats(local);
+    var zh = new Array(13).fill(0); cp.forEach(function (r) { r.Z.hist.forEach(function (v, k) { zh[k] += v; }); });
+    var rhoSol = m.Mpart / Vsol;
+    summary = { m: m, sp: sp, ss: ss, zp: zp, zs: zs, ys: ys, mix: mix, mixLo: mixLo, mixHi: mixHi, fur: fur, d1: d1, d2: d2, Vsol: Vsol, e: e,
+      W: e * Vsol, Wlo: (1 - mixHi) / mixHi * Vsol, Whi: (1 - mixLo) / mixLo * Vsol, ls: ls, zh: zh, rhoSol: rhoSol, nconvP: cp.length, nconvS: cs.length, nP: rp.length, nS: rs.length,
+      secs: (Date.now() - run.t0) / 1000, state: cfg.set.state, date: new Date() };
+    logLine('全部完成，總耗時 ' + Math.round(summary.secs) + ' 秒。');
+    if (view.sel === 'live') { view.sel = 'p'; view.seed = 0; $('scaleSel').value = 'p'; refreshSeeds(); showSelected(); }
+    renderResult(); renderReport();
+    setTimeout(function () { switchTab('result'); }, 600);
+  }
+  function kpi(l, v, s) { return '<div class="kpi"><div class="l">' + l + '</div><div class="v">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>'; }
+  function resultHTML(forPrint) {
+    var S = summary; if (!S) return '<div class="card"><p>尚無成果。</p></div>';
+    var m = S.m, dry = S.state === 'dry', h = '';
+    var badConv = S.nconvP < S.nP || S.nconvS < S.nS;
+    var pm = function (v, lo, hi, d) { return fmt(v, d) + '<span style="font-size:.9rem;font-weight:400"> (' + fmt(lo, d) + '–' + fmt(hi, d) + ')</span>'; };
+    h += '<h2>1. 主要成果（' + (dry ? '乾粉態' : '分散態') + '）</h2><div class="kpis">' +
+      kpi('拌合料整體堆積率 φ<sub>mix</sub>', pm(S.mix.phi, S.mixLo, S.mixHi, 3), 'CPM 二成分組合；括號為 φ<sub>p</sub>、φ<sub>s</sub> ± 1 標準差之範圍') +
+      kpi('粉體尺度堆積率 φ<sub>p</sub>', fmt(S.sp.mean, 3), '± ' + fmt(S.sp.sd, 3) + '（' + S.sp.n + ' 組收斂）') +
+      kpi('砂尺度堆積率 φ<sub>s</sub>', fmt(S.ss.mean, 3), '± ' + fmt(S.ss.sd, 3) + '（' + S.ss.n + ' 組收斂）') +
+      kpi('空隙比 e', fmt(S.e, 3), 'e = (1 − φ<sub>mix</sub>) / φ<sub>mix</sub>');
+    if (dry) h += kpi('乾態單位重（未計團聚之上限）', fmt(S.mix.phi * S.rhoSol * 1000, 0) + ' kg/m³', '範圍 ' + fmt(S.mixLo * S.rhoSol * 1000, 0) + '–' + fmt(S.mixHi * S.rhoSol * 1000, 0) + '；球體、未計纖維與添加劑');
+    else h += kpi('填滿空隙最小需水量 W/B', pm(S.W / m.B, S.Wlo / m.B, S.Whi / m.B, 3), '每批 ' + fmt(S.W, 1) + ' kg；B = 膠結材 ' + fmt(m.B, 0) + ' kg；未含表面水膜');
+    h += kpi('粉體平均配位數 Z', fmt(S.zp.mean, 2), '已剔除接觸數 < 2 之鬆動顆粒') + '</div>';
+    if (dry) h += '<div class="card warnbox"><div class="card-header"><h3>乾粉態結果之適用範圍</h3></div><p>本工具以等向壓縮達到圍壓 P₀，並未模擬粉體自由落下時之團聚與架橋；細粉（&lt; 10 μm）實際鬆裝時常形成團聚體，使單位重遠低於本值。乾粉態結果僅適合比較不同配比之相對趨勢，絕對值須以 ASTM C29 類鬆裝單位重試驗校準。</p></div>';
+    if (badConv) h += '<div class="card badbox"><p>部分計算未收斂（粉體 ' + S.nconvP + '/' + S.nP + '、砂 ' + S.nconvS + '/' + S.nS + ' 組收斂），未收斂者已排除於平均值外；建議降低精度等級或增加重複次數後重算。</p></div>';
+    h += '<h2>2. 雙尺度組合</h2><div class="card"><table class="rt"><thead><tr><th>項目</th><th>堆積率</th><th>標準差</th><th>代表粒徑 D50（μm）</th><th>截斷體積（細／粗）</th><th>收斂組數</th></tr></thead><tbody>' +
+      '<tr><td data-label="項目">粉體尺度 φ<sub>p</sub></td><td data-label="堆積率">' + fmt(S.sp.mean) + '</td><td data-label="標準差">' + fmt(S.sp.sd) + '</td><td data-label="代表粒徑 D50（μm）">' + fmt(S.d2, 1) + '</td><td data-label="截斷體積（細／粗）">' + fmt(m.dp.below * 100, 1) + '% / ' + fmt(m.dp.above * 100, 1) + '%</td><td data-label="收斂組數">' + S.nconvP + ' / ' + S.nP + '</td></tr>' +
+      '<tr><td data-label="項目">砂尺度 φ<sub>s</sub></td><td data-label="堆積率">' + fmt(S.ss.mean) + '</td><td data-label="標準差">' + fmt(S.ss.sd) + '</td><td data-label="代表粒徑 D50（μm）">' + fmt(S.d1, 1) + '</td><td data-label="截斷體積（細／粗）">' + fmt(m.ds.below * 100, 1) + '% / ' + fmt(m.ds.above * 100, 1) + '%</td><td data-label="收斂組數">' + S.nconvS + ' / ' + S.nS + '</td></tr>' +
+      '<tr><td data-label="項目">組合 φ<sub>mix</sub>（CPM）</td><td data-label="堆積率">' + fmt(S.mix.phi) + '</td><td data-label="標準差">' + fmt(S.mixLo) + '–' + fmt(S.mixHi) + '</td><td data-label="代表粒徑 D50（μm）">d₂/d₁ = ' + fmt(S.d2 / S.d1, 3) + '</td><td data-label="截斷體積（細／粗）">—</td><td data-label="收斂組數">—</td></tr>' +
+      '</tbody></table>' +
+      '<p class="note">砂（≥ 75 μm）佔固體體積 y<sub>s</sub> = ' + fmt(S.ys * 100, 1) + '%；鬆動效應係數 a = ' + fmt(S.mix.a, 3) + '、壁效應係數 b = ' + fmt(S.mix.b, 3) + '；砂骨架恰被粉體填滿之砂體積比 y* = ' + fmt(S.mix.yStar * 100, 1) + '%。判定：<b>' + S.mix.regime + '</b>。不計交互作用之 Furnas 極限值為 ' + fmt(S.fur.phi) + '。</p>' +
+      '<p class="note">截斷影響：粉體細端 ' + fmt(m.dp.below * 100, 1) + '% 體積被夾大至窗口下限，使 φ<sub>p</sub> 傾向低估；球形假設則使 φ<sub>p</sub> 傾向高估（稜角顆粒堆積較鬆）。兩者方向相反，淨偏差須以濕堆積試驗校準。</p></div>';
+    var gap = S.mix.yStar - S.ys;
+    h += '<div class="card"><div class="card-header"><h3>配比解讀</h3></div><p>' + (S.ys < S.mix.yStar ?
+      '目前砂量低於 y*，砂粒被粉體隔開而不形成骨架，堆積率主要由粉體級配決定；改善粉體級配（如調整爐石粉與飛灰比例）對整體緻密度影響最大。此情形符合 ECC 高膠結材、細砂之設計取向。' :
+      '目前砂量高於 y*，粉體不足以填滿砂骨架空隙，增加粉體或採較細之填充料可提高緻密度。') +
+      '（y* − y<sub>s</sub> = ' + fmt(gap * 100, 1) + ' 個百分點）</p></div>';
+    h += '<h2>3. 局部均勻性與接觸</h2><div class="two"><div class="card"><div class="card-header"><h3>粉體局部堆積率（3×3×3 子區塊）</h3></div><p>平均 ' + fmt(S.ls.mean) + '，標準差 ' + fmt(S.ls.sd) + '，變異係數 ' + fmt(S.ls.sd / S.ls.mean * 100, 1) + '%（' + S.ls.n + ' 個子區塊）。</p><p class="note">子區塊尺寸接近最大粒徑數倍，變異係數主要反映模型尺寸效應，不宜直接解讀為材料離析。</p></div>' +
+      '<div class="card"><div class="card-header"><h3>粉體配位數分布</h3></div>' + barChart(S.zh, S.zh.map(function (v, k) { return k === 12 ? '12+' : '' + k; }), { xlabel: '接觸數', ylabel: '顆粒數', title: '配位數分布' }) + '</div></div>';
+    var fv = m.pvaVol / (S.Vsol + m.pvaVol);
+    h += '<h2>4. 規格與提示</h2>';
+    m.mats.forEach(function (q, i) { var lim = cfg.mats[i].lim, b = m.cfg.mats[i].blaine, ok = lim[0] === 'lt' ? b < lim[1] : b >= lim[1]; h += '<div class="card' + (ok ? '' : ' badbox') + '"><div class="card-header"><span class="swatch" style="background:' + HEX[i] + '"></span><h3>' + q.name + '</h3>' + badge(ok, 'Blaine ' + b) + '</div><p class="note">' + (q.custom ? '自訂粒徑分布' : 'RRSB 反算 x′ = ' + fmt(q.xp, 1) + ' μm、n = ' + m.cfg.mats[i].n) + '；D50 = ' + fmt(q.d50, 1) + ' μm</p></div>'; });
+    h += '<div class="card"><div class="card-header"><span class="swatch" style="background:' + HEX[3] + '"></span><h3>石英細砂</h3>' + badge(m.FM >= 1.4 && m.FM <= 1.6, 'FM ' + fmt(m.FM, 2)) + badge(m.cfg.sand.passing[4] < 3, '0.075 mm 通過 ' + m.cfg.sand.passing[4] + '%') + '</div><p class="note">&lt; 75 μm 部分（' + fmt(m.fFine * 100, 1) + '%）已併入粉體尺度計算。</p></div>';
+    h += '<div class="card warnbox"><div class="card-header"><h3>PVA 纖維未納入模型</h3></div><p>纖維約佔固體體積 ' + fmt(fv * 100, 2) + '%。纖維長度遠大於顆粒尺寸，會在纖維周邊形成鬆散區，實際堆積率將低於本表數值，修正量須以有纖維／無纖維對照試驗求得。</p></div>';
+    h += '<div class="card badbox"><p>本成果採文獻暫代參數，尚未經本批材料試驗校準，僅供配比間相對比較。</p></div>';
+    return h;
+  }
+  function renderResult() { $('resultBody').innerHTML = resultHTML(false); }
+  function renderReport() {
+    if (!summary) return;
+    var m = summary.m, c = m.cfg, h = '<div class="card"><div class="card-header"><h3>乾拌砂漿粉體緻密堆積模擬報告</h3></div><p class="note">產製時間：' + summary.date.toLocaleString('zh-TW', { hour12: false }) + '　計算耗時 ' + Math.round(summary.secs) + ' 秒　精度等級：' + { fast: '快速', std: '標準', fine: '精細' }[c.set.preset] + '</p></div>';
+    h += '<h2>輸入配比</h2><div class="card"><table class="rt"><thead><tr><th>材料</th><th>用量（kg）</th><th>密度（g/cm³）</th><th>Blaine / FM</th></tr></thead><tbody>';
+    c.mats.forEach(function (q) { h += '<tr><td data-label="材料">' + q.name + '</td><td data-label="用量（kg）">' + q.mass + '</td><td data-label="密度（g/cm³）">' + q.rho + '</td><td data-label="Blaine / FM">' + q.blaine + ' m²/kg</td></tr>'; });
+    h += '<tr><td data-label="材料">ECC 專用石英細砂</td><td data-label="用量（kg）">' + c.sand.mass + '</td><td data-label="密度（g/cm³）">' + c.sand.rho + '</td><td data-label="Blaine / FM">FM ' + fmt(m.FM, 2) + '</td></tr>';
+    c.adds.forEach(function (a) { h += '<tr><td data-label="材料">' + a.name + '</td><td data-label="用量（kg）">' + a.mass + '</td><td data-label="密度（g/cm³）">—</td><td data-label="Blaine / FM">未納入顆粒模型</td></tr>'; });
+    h += '</tbody></table><p class="note">模擬參數：μ<sub>粉體</sub> = ' + c.set.mu_p + '、μ<sub>砂</sub> = ' + c.set.mu_s + '、e = ' + c.set.e_rest + '、重複 ' + c.set.nrep + ' 組' + (c.set.state === 'dry' ? '、P₀ = ' + c.set.P0 + ' kPa、A = ' + c.set.hamaker + '×10⁻²⁰ J、z₀ = ' + c.set.z0 + ' nm、粗糙度折減 ' + c.set.frough : '') + '</p></div>';
+    h += resultHTML(true);
+    $('reportBody').innerHTML = h;
+  }
+
+  /* ---------- 自我檢驗 ---------- */
+  var tests = {};
+  var TDEF = [
+    { k: 'c5', t: '兩球正碰：恢復係數', ref: '設定 e = 0.5；線性阻尼解析式 e = exp(−πζ/√(1−ζ²))（Schäfer 等, 1996）', judge: function (v) { return { ok: Math.abs(v.eMeas - 0.5) < 0.01 && Math.abs(v.tc / v.tcTheory - 1) < 0.03, txt: '實測 e = ' + fmt(v.eMeas, 4) + '；接觸時間 ' + fmt(v.tc, 4) + '（理論 ' + fmt(v.tcTheory, 4) + '）' }; } },
+    { k: 'c1', t: '能量守恆（無阻尼、無摩擦）', ref: '碰撞前後動能比應為 1（容許 ±0.5%）', judge: function (v) { return { ok: Math.abs(v.keRatio - 1) < 0.005, txt: '動能比 = ' + fmt(v.keRatio, 5) }; } },
+    { k: 'fcc', t: 'FCC 晶格堆積率計算', ref: '理論值 π/(3√2) = 0.7405', judge: function (v) { return { ok: Math.abs(v.phiExact - 0.74048) < 1e-4 && Math.abs(v.phiMC - 0.74048) < 0.005, txt: '解析 ' + fmt(v.phiExact, 4) + '；蒙地卡羅 ' + fmt(v.phiMC, 4) }; } },
+    { k: 'm0', t: '單一粒徑、無摩擦壓縮', ref: '隨機緊密堆積 φ ≈ 0.64、Z ≈ 6（Scott & Kilgour 1969；O\'Hern 等 2003）；容許 0.62–0.655', judge: function (v) { return { ok: v.conv && v.phi > 0.62 && v.phi < 0.655 && v.Z > 5.6 && v.Z < 6.6, txt: 'φ = ' + fmt(v.phi, 4) + '、Z = ' + fmt(v.Z, 2) + '（' + fmt(v.secs, 1) + ' 秒）' }; } },
+    { k: 'm1', t: '單一粒徑、高摩擦（μ = 1.0）壓縮', ref: '摩擦增加使 φ 由 0.64 降向隨機鬆散堆積 0.55（Silbert 2010；Onoda & Liniger 1990）；容許 0.55–0.61', judge: function (v) { var m0 = tests.m0; return { ok: v.conv && v.phi > 0.55 && v.phi < 0.61 && (!m0 || v.phi < m0.phi) && v.Z > 3.8 && v.Z < 5.2, txt: 'φ = ' + fmt(v.phi, 4) + '、Z = ' + fmt(v.Z, 2) + (m0 ? '；較無摩擦低 ' + fmt(m0.phi - v.phi, 4) : '') }; } },
+    { k: 'dt', t: '時間步長收斂（Δt 減半）', ref: '單一粒徑 μ = 0.5，Δt 減半後 |Δφ| < 0.01', judge: function (v) { var d = Math.abs(v.a.phi - v.b.phi); return { ok: d < 0.01 && v.a.conv && v.b.conv, txt: 'φ(Δt) = ' + fmt(v.a.phi, 4) + '、φ(Δt/2) = ' + fmt(v.b.phi, 4) + '、差 ' + fmt(d, 4) }; } },
+    { k: 'psd', t: 'Blaine 反算與細度模數', ref: '反算分布之比表面積須等於輸入 Blaine（±0.5%）；級配 100/88/45/12/2 之 FM = 1.55', judge: function (v) { return { ok: v.maxErr < 0.005 && Math.abs(v.fm - 1.55) < 1e-9, txt: '比表面積最大誤差 ' + fmt(v.maxErr * 100, 3) + '%；FM = ' + fmt(v.fm, 2) }; } }
+  ];
+  function renderTests() {
+    $('testBody').innerHTML = TDEF.map(function (d) {
+      var v = tests[d.k], j = v ? d.judge(v) : null;
+      return '<div class="card test' + (j ? (j.ok ? '' : ' badbox') : '') + '"><div class="card-header"><h3>' + d.t + '</h3>' + (j ? '<span class="badge ' + (j.ok ? 'ok' : 'bad') + '">' + (j.ok ? '通過' : '未通過') + '</span>' : '<span class="badge warn">待執行</span>') + '</div>' +
+        '<p class="note">基準：' + d.ref + '</p>' + (j ? '<p>' + j.txt + '</p>' : '') + '</div>';
+    }).join('');
+  }
+  function testResult(k, v) { tests[k] = v; renderTests(); }
+  function logTestSummary() { var n = TDEF.filter(function (d) { return tests[d.k] && d.judge(tests[d.k]).ok; }).length; $('testBody').insertAdjacentHTML('afterbegin', '<div class="card"><p><b>檢驗完成：' + n + ' / ' + TDEF.length + ' 項通過。</b></p></div>'); }
+  function runTests() {
+    tests = {}; renderTests(); $('testBtn').disabled = true;
+    readInputs();
+    var maxErr = 0;
+    cfg.mats.forEach(function (m) { var xp = PSD.solveXp(m.blaine, m.rho, m.n, m.dlo, m.dhi, 1); var s = PSD.ssa(PSD.rrsbBins(xp, m.n, m.dlo, m.dhi), m.rho); maxErr = Math.max(maxErr, Math.abs(s / m.blaine - 1)); });
+    testResult('psd', { maxErr: maxErr, fm: PSD.finenessModulus([1.18, 0.6, 0.3, 0.15, 0.075], [100, 88, 45, 12, 2]) });
+    var tw = makeWorker(); tw.onmessage = function (ev) { onMsg(ev); if (ev.data.type === 'tdone') tw.terminate(); };
+    tw.postMessage({ cmd: 'test' });
+  }
+
+  /* ---------- 參數表 ---------- */
+  function renderParams() {
+    var rows = [
+      ['水泥密度', '3.15 g/cm³', '卜特蘭水泥常用值'], ['爐石粉密度', '2.90 g/cm³', '高爐石粉常用值'], ['F 級飛灰密度', '2.25 g/cm³', '低鈣飛灰常見範圍 2.1–2.4'], ['石英砂密度', '2.65 g/cm³', '石英礦物密度'],
+      ['Blaine（水泥／爐石／飛灰）', '340 / 500 / 290 m²/kg', '依規格上下限取代表值'],
+      ['RRSB n（水泥／爐石／飛灰）', '1.05 / 1.00 / 0.95', 'Rosin–Rammler 分布；工業粉體常見 0.8–1.2，暫代'],
+      ['Blaine 與球體比表面積關係', '1 : 1', '暫代；實際比值依顆粒形狀而異，應以雷射粒徑分析取代'],
+      ['粉體摩擦係數 μ', '分散態 0.1；乾粉態 0.5', '分散態以接觸潤滑近似；乾態取礦物顆粒常用 DEM 值'],
+      ['石英砂摩擦係數 μ', '0.5', '石英顆粒常用 DEM 值'],
+      ['恢復係數 e', '0.3', '準靜態堆積對 e 不敏感，取高阻尼以加速鬆弛'],
+      ['Hamaker 常數 A', '6.5 × 10⁻²⁰ J', '矽質礦物於真空／空氣中之代表值（Israelachvili 2011）'],
+      ['最小間距 z₀', '0.4 nm', '凡得瓦力常用截斷距離（Israelachvili 2011）'],
+      ['表面粗糙度折減', '0.1', '粗糙度使有效接觸半徑降低一個數量級之假設，暫代'],
+      ['乾粉態圍壓 P₀', '5 kPa', '約 0.4 m 粉體自重，對應袋裝／料斗狀態'],
+      ['CPM 鬆動／壁效應指數', '1.02 / 1.50', 'de Larrard（1999）二成分交互作用係數'],
+      ['PVA 纖維密度', '1.30 g/cm³', 'PVA 常用值']
+    ];
+    $('paramTable').innerHTML = '<div class="card"><table class="rt"><thead><tr><th>參數</th><th>預設值</th><th>依據</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr><td data-label="參數">' + r[0] + '</td><td data-label="預設值">' + r[1] + '</td><td data-label="依據" style="text-align:left">' + r[2] + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+
+  /* ---------- 分頁、PWA ---------- */
+  function switchTab(t) {
+    document.querySelectorAll('nav button').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.tab').forEach(function (s) { s.classList.toggle('on', s.id === 'tab-' + t); });
+    if (t === 'proc') setTimeout(sizeCanvas, 30);
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('nav button').forEach(function (b) { b.addEventListener('click', function () { switchTab(b.dataset.tab); }); });
+  $('runBtn').addEventListener('click', startRun);
+  $('stopBtn').addEventListener('click', stopRun);
+  $('testBtn').addEventListener('click', runTests);
+  $('printBtn').addEventListener('click', function () { renderReport(); window.print(); });
+  $('resetBtn').addEventListener('click', function () { cfg = JSON.parse(JSON.stringify(DEF)); save(); renderInputs(); });
+  (function pwa() {
+    var deferred = null, st = $('pwaState');
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; $('installBtn').hidden = false; });
+    $('installBtn').addEventListener('click', function () { if (!deferred) return; deferred.prompt(); deferred.userChoice.then(function () { deferred = null; $('installBtn').hidden = true; }); });
+    window.addEventListener('appinstalled', function () { st.textContent = '已安裝至本機。'; });
+    if (!('serviceWorker' in navigator) || !/^https?:/.test(location.protocol)) { st.textContent = '目前以本機檔案開啟，離線快取未啟用；部署至 GitHub Pages 後即可安裝。'; return; }
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      st.textContent = navigator.serviceWorker.controller ? '離線快取已啟用。' : '離線快取安裝中，重新整理後即可離線使用。';
+      reg.addEventListener('updatefound', function () {
+        var nw = reg.installing; if (!nw) return;
+        nw.addEventListener('statechange', function () { if (nw.state === 'installed' && navigator.serviceWorker.controller) { $('updBar').hidden = false; $('updBar').style.display = 'flex'; $('updBtn').onclick = function () { nw.postMessage('skipWaiting'); }; } });
+      });
+    }).catch(function (e) { st.textContent = '離線快取註冊失敗：' + e.message; });
+    var reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (!reloaded) { reloaded = true; location.reload(); } });
+  })();
+
+  cfg = load();
+  if (!cfg.set || !cfg.mats || cfg.mats.length !== 3) cfg = JSON.parse(JSON.stringify(DEF));
+  renderInputs(); renderParams(); renderTests(); legendView();
+  buildModel(); renderProcess();
+})();
+
+</script>
+</body>
+</html>
